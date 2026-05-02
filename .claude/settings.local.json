@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(curl -s http://localhost:3000/drivers/norris)",
+      "Bash(curl -s http://localhost:3000/api/drivers)",
+      "Bash(curl -s \"https://api.jolpi.ca/ergast/f1/current/driverStandings.json\")",
+      "Bash(curl -s \"http://localhost:3000/api/drivers\")",
+      "Bash(curl -s \"https://api.jolpi.ca/ergast/f1/current/drivers/colapinto/results.json?limit=100\")",
+      "Bash(node *)",
+      "Bash(curl -s \"http://localhost:3000/api/drivers\" -v)"
+    ]
+  }
+}
