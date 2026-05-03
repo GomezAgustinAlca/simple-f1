@@ -60,17 +60,53 @@ function getSeasons(): number[] {
 }
 
 function conclusionText(summary: DriverPerformanceSummary): string {
-  const { trend, dnfs, racesCount } = summary
-  const dnfRate = racesCount > 0 ? dnfs / racesCount : 0
-  if (trend === "UP") return "Piloto en mejora: mejores resultados en las últimas carreras."
-  if (trend === "DOWN") return "Piloto en caída: resultados recientes peores que en carreras anteriores."
-  if (trend === "UNSTABLE" || dnfRate >= 0.25)
-    return "Piloto con baja consistencia: múltiples DNFs y resultados irregulares."
-  if (trend === "STABLE") {
-    if (dnfs === 0) return "Piloto consistente: terminó todas las carreras con resultados similares."
-    return "Piloto consistente: resultados similares de carrera en carrera."
+  const { trend, dnfs, racesCount, lastFiveAveragePosition, seasonAveragePosition, bestFinish, worstFinish } = summary
+
+  const p = (n: number | null) => (n != null ? `P${Math.round(n)}` : null)
+  const seasonAvg = p(seasonAveragePosition)
+  const lastFiveAvg = p(lastFiveAveragePosition)
+  const best = p(bestFinish)
+  const worst = p(worstFinish)
+  const dnfPart = dnfs > 0 ? ` y ${dnfs} abandono${dnfs > 1 ? "s" : ""}` : " sin abandonos"
+
+  if (trend === "INSUFFICIENT_DATA") {
+    return `Solo ${racesCount} carrera${racesCount === 1 ? "" : "s"} completada${racesCount === 1 ? "" : "s"}, sin tendencia definida aún.`
   }
-  return "Aún no hay suficientes carreras para evaluar una tendencia confiable."
+
+  if (trend === "UP") {
+    if (seasonAvg && lastFiveAvg) {
+      const bestPart = best ? ` Mejor resultado: ${best}.` : ""
+      return `Mejorando: ${lastFiveAvg} de promedio en las últimas 5 carreras vs ${seasonAvg} de promedio general.${bestPart}`
+    }
+    return `Resultados en alza en las últimas carreras. Mejor resultado: ${best ?? "—"}.`
+  }
+
+  if (trend === "DOWN") {
+    if (seasonAvg && lastFiveAvg) {
+      return `En caída: promediaba ${seasonAvg} en el año pero bajó a ${lastFiveAvg} en las últimas 5 salidas${dnfPart}.`
+    }
+    return `Rendimiento en descenso en las últimas carreras${dnfPart}.`
+  }
+
+  if (trend === "STABLE") {
+    const spread = bestFinish != null && worstFinish != null ? worstFinish - bestFinish : null
+    if (spread != null && spread <= 3) {
+      return `Alta consistencia: se mueve entre ${best} y ${worst} con muy poca variación${dnfPart}.`
+    }
+    if (seasonAvg) {
+      return `Promedia ${seasonAvg} en la temporada con resultados entre ${best} y ${worst}${dnfPart}.`
+    }
+    return `Rendimiento estable de carrera en carrera${dnfPart}.`
+  }
+
+  if (trend === "UNSTABLE") {
+    if (best && worst) {
+      return `Alta irregularidad: resultados entre ${best} y ${worst} en la temporada${dnfPart}.`
+    }
+    return `Resultados muy irregulares de carrera en carrera${dnfPart}.`
+  }
+
+  return "Sin datos suficientes para evaluar tendencia."
 }
 
 function raceStatus(status: string): { label: string; color: string } {
@@ -148,9 +184,10 @@ interface DriverDetailPanelProps {
   detail: DriverDetail | null
   isLoading: boolean
   hasError: boolean
+  isPremium: boolean
 }
 
-function DriverDetailPanel({ driverId, detail, isLoading, hasError }: DriverDetailPanelProps) {
+function DriverDetailPanel({ driverId, detail, isLoading, hasError, isPremium }: DriverDetailPanelProps) {
   return (
     <div className="rounded-b-2xl border border-gray-100 border-t-0 bg-gray-50 overflow-hidden">
       {isLoading && (
@@ -173,10 +210,29 @@ function DriverDetailPanel({ driverId, detail, isLoading, hasError }: DriverDeta
 
       {!isLoading && !hasError && detail && (
         <div className="p-5 space-y-4">
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Conclusión</p>
-            <p className="text-sm text-gray-800">{conclusionText(detail.summary)}</p>
-          </div>
+          {isPremium ? (
+            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
+              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Conclusión</p>
+              <p className="text-sm text-gray-800">{conclusionText(detail.summary)}</p>
+            </div>
+          ) : (
+            <a
+              href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block relative rounded-xl overflow-hidden cursor-pointer"
+            >
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 select-none">
+                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Conclusión</p>
+                <p className="text-sm text-gray-800 blur-sm">{conclusionText(detail.summary)}</p>
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-indigo-900/30 backdrop-blur-[1px]">
+                <span className="text-xs font-semibold text-white bg-indigo-600 px-3 py-1.5 rounded-full shadow">
+                  Desbloqueá para ver el análisis completo
+                </span>
+              </div>
+            </a>
+          )}
 
           {detail.results.length > 0 ? (
             <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
@@ -650,6 +706,7 @@ export default function RankingsPage() {
                         detail={cached?.data ?? null}
                         isLoading={loadingDetail === entry.driverId}
                         hasError={cached?.error ?? false}
+                        isPremium={isPremium}
                       />
                     )}
                   </div>
