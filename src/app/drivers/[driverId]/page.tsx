@@ -1,17 +1,14 @@
 import type { Metadata } from "next"
-import { getDriverResults, getDriverStandings, getRaceResults } from "@/lib/jolpica"
-import { buildPerformanceSummary, buildTeammateComparison } from "@/lib/performance"
+import { getDriverResults, getDriverStandings, getRaceResults, getCurrentSeasonYear } from "@/lib/jolpica"
+import { buildPerformanceSummary, buildTeammateComparison, getPerformanceLevel, getTrend, getRecentPerformance } from "@/lib/performance"
 import { enrichSummary } from "@/lib/summaries"
 import { formatPosition } from "@/lib/format"
 import { nationalityFlag } from "@/lib/flags"
-import { SummaryBadge } from "@/components/SummaryBadge"
-import { TrendArrow } from "@/components/TrendArrow"
 import { DriverAvatar } from "@/components/DriverAvatar"
 import { RaceEvolutionChart } from "@/components/RaceEvolutionChart"
 import { RecentRaceTable } from "@/components/RecentRaceTable"
 import { TeammateComparisonCard } from "@/components/TeammateComparisonCard"
 import { PremiumBanner } from "@/components/PremiumBanner"
-import { AdBanner } from "@/components/AdBanner"
 import { DriverCard } from "@/components/DriverCard"
 import { DriverPageClient } from "./DriverPageClient"
 
@@ -35,13 +32,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DriverPage({ params }: Props) {
   const { driverId } = await params
-  const seasonNum = new Date().getFullYear()
 
-  const [results, standings, allSeasonResults] = await Promise.all([
+  const [results, standings, allSeasonResults, currentSeasonStr] = await Promise.all([
     getDriverResults("current", driverId),
     getDriverStandings("current"),
     getRaceResults("current"),
+    getCurrentSeasonYear(),
   ])
+  const seasonNum = parseInt(currentSeasonStr)
 
   const standing = standings.find((s) => s.driverId === driverId)
   const driverName = standing
@@ -126,24 +124,22 @@ export default async function DriverPage({ params }: Props) {
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-2">
-          <p className="text-xs text-gray-400 uppercase tracking-wide">Estado actual</p>
-          <SummaryBadge label={summary.statusLabel} />
+          <p className="text-xs text-gray-400 uppercase tracking-wide">Nivel</p>
+          <p className="text-sm font-semibold text-gray-900">
+            {getPerformanceLevel(summary.seasonAveragePosition)}
+          </p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-2">
           <p className="text-xs text-gray-400 uppercase tracking-wide">Tendencia</p>
-          <TrendArrow trend={summary.trend} size="md" />
+          <p className="text-sm font-semibold text-gray-900">
+            {getTrend(results)}
+          </p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-2">
-          <p className="text-xs text-gray-400 uppercase tracking-wide">Prom. últ. 5</p>
-          {summary.racesCount - summary.dnfs < 2 ? (
-            <p className="text-sm font-semibold text-amber-600">Muestra limitada</p>
-          ) : (
-            <p className="text-2xl font-black text-gray-900">
-              {summary.lastFiveAveragePosition != null
-                ? summary.lastFiveAveragePosition.toFixed(1)
-                : "—"}
-            </p>
-          )}
+          <p className="text-xs text-gray-400 uppercase tracking-wide">Rendimiento reciente</p>
+          <p className="text-sm font-semibold text-gray-900">
+            {getRecentPerformance(summary.lastFiveAveragePosition, summary.racesCount)}
+          </p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-2">
           <p className="text-xs text-gray-400 uppercase tracking-wide">DNFs temporada</p>
@@ -162,14 +158,6 @@ export default async function DriverPage({ params }: Props) {
           </p>
         </div>
       )}
-
-      {/* Conclusion */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
-        <p className="text-sm font-semibold text-indigo-700 mb-1">Análisis rápido</p>
-        <p className="text-gray-800">{summary.summaryText}</p>
-      </div>
-
-      <AdBanner slot="3204857191" />
 
       {/* Charts — client component handles premium */}
       <DriverPageClient

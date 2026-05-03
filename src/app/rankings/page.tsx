@@ -54,7 +54,10 @@ interface DetailState {
   error: boolean
 }
 
-const SEASONS = [2020, 2021, 2022, 2023, 2024, 2025]
+function getSeasons(): number[] {
+  const currentYear = new Date().getFullYear()
+  return Array.from({ length: currentYear - 2019 }, (_, i) => 2020 + i)
+}
 
 function conclusionText(summary: DriverPerformanceSummary): string {
   const { trend, dnfs, racesCount } = summary
@@ -240,6 +243,8 @@ function DriverDetailPanel({ driverId, detail, isLoading, hasError }: DriverDeta
 }
 
 function HistoricalSection() {
+  const SEASONS = getSeasons()
+  const currentYear = SEASONS[SEASONS.length - 1]
   const [data, setData] = useState<HistoricalEntry[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -272,7 +277,7 @@ function HistoricalSection() {
       <div>
         <h2 className="text-xl font-bold text-gray-900">Histórico de temporadas</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Rendimiento acumulado 2020–2025. Ordenado por victorias totales.
+          Rendimiento acumulado 2020–{currentYear}. Ordenado por victorias totales.
         </p>
       </div>
       <div className="overflow-x-auto rounded-2xl border border-gray-100 shadow-sm bg-white">
@@ -349,7 +354,9 @@ function HistoricalSection() {
 }
 
 function SeasonSection() {
-  const [year, setYear] = useState(2025)
+  const SEASONS = getSeasons()
+  const currentYear = SEASONS[SEASONS.length - 1]
+  const [year, setYear] = useState(currentYear)
   const [data, setData] = useState<SeasonEntry[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -358,7 +365,8 @@ function SeasonSection() {
     setLoading(true)
     setError(false)
     setData(null)
-    fetch(`/api/rankings/season?year=${year}`)
+    const apiYear = year === currentYear ? "current" : year
+    fetch(`/api/rankings/season?year=${apiYear}`)
       .then((r) => {
         if (!r.ok) throw new Error()
         return r.json()
@@ -366,7 +374,7 @@ function SeasonSection() {
       .then(setData)
       .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }, [year])
+  }, [year, currentYear])
 
   return (
     <div className="space-y-4">

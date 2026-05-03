@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server"
-import { getDriverStandings, getRaceResults } from "@/lib/jolpica"
-
-const SEASONS = [2020, 2021, 2022, 2023, 2024, 2025]
+import { getDriverStandings, getRaceResults, getCurrentSeasonYear } from "@/lib/jolpica"
 
 export async function GET() {
+  const currentSeasonStr = await getCurrentSeasonYear()
+  const currentYear = parseInt(currentSeasonStr)
+  const SEASONS = Array.from({ length: currentYear - 2019 }, (_, i) => 2020 + i)
+
   const seasonData = await Promise.all(
     SEASONS.map(async (season) => {
+      const param: number | "current" = season === currentYear ? "current" : season
       const [standings, results] = await Promise.all([
-        getDriverStandings(season),
-        getRaceResults(season),
+        getDriverStandings(param),
+        getRaceResults(param),
       ])
       return { season, standings, results }
     })

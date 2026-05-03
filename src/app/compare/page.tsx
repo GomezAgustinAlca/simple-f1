@@ -7,80 +7,12 @@ import { RaceEvolutionChart } from "@/components/RaceEvolutionChart"
 import { PremiumBanner } from "@/components/PremiumBanner"
 import { PremiumModal } from "@/components/PremiumModal"
 import { AdSlot } from "@/components/AdSlot"
-import { TrackDuel } from "@/components/duel/TrackDuel"
+// import { TrackDuel } from "@/components/duel/TrackDuel"  // DUEL DESACTIVADO
 import { useAuth } from "@/contexts/AuthContext"
 import type { DriverStanding, DriverPerformanceSummary, RaceResult } from "@/types/f1"
 import { getTeamColor } from "@/components/duel/circuitData"
+import { getCompareWinner } from "@/lib/performance"
 
-function CompareVerdict({
-  nameA,
-  nameB,
-  summaryA,
-  summaryB,
-}: {
-  nameA: string
-  nameB: string
-  summaryA: DriverPerformanceSummary
-  summaryB: DriverPerformanceSummary
-}) {
-  const finishedA = summaryA.racesCount - summaryA.dnfs
-  const finishedB = summaryB.racesCount - summaryB.dnfs
-  if (finishedA < 2 || finishedB < 2) {
-    return (
-      <div className="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-2xl px-6 py-4">
-        <svg className="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-        </svg>
-        <p className="font-semibold text-amber-700 text-sm">
-          Muestra limitada — uno o ambos pilotos tienen menos de 2 carreras válidas terminadas
-        </p>
-      </div>
-    )
-  }
-
-  const avgA = summaryA.seasonAveragePosition
-  const avgB = summaryB.seasonAveragePosition
-  if (avgA == null || avgB == null) return null
-
-  const diff = Math.abs(avgA - avgB)
-  const winnerName = avgA <= avgB ? nameA : nameB
-  const loserName = avgA <= avgB ? nameB : nameA
-
-  if (diff <= 0.5) {
-    return (
-      <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4">
-        <span className="text-gray-400 font-bold text-lg leading-none">=</span>
-        <p className="font-semibold text-gray-700 text-sm">
-          Rendimiento similar entre {nameA} y {nameB}
-        </p>
-      </div>
-    )
-  }
-
-  if (diff <= 3) {
-    return (
-      <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-100 rounded-2xl px-6 py-4">
-        <svg className="w-5 h-5 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-        <p className="font-semibold text-indigo-800 text-sm">
-          Ventaja leve para <span className="font-bold">{winnerName}</span>
-        </p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex items-center gap-3 bg-indigo-600 rounded-2xl px-6 py-4">
-      <svg className="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-      </svg>
-      <p className="font-bold text-white text-sm">
-        {winnerName} rinde mejor que {loserName} esta temporada
-      </p>
-    </div>
-  )
-}
 
 function CompareSkeleton() {
   return (
@@ -127,7 +59,7 @@ function CompareContent() {
   const { isPremium } = useAuth()
 
   const [tab, setTab] = useState<Tab>("compare")
-  const [showPremiumModal, setShowPremiumModal] = useState(false)
+  // const [showPremiumModal, setShowPremiumModal] = useState(false)  // DUEL DESACTIVADO
   const [drivers, setDrivers] = useState<DriverStanding[]>([])
   const [driverA, setDriverA] = useState(searchParams.get("driverA") ?? "")
   const [driverB, setDriverB] = useState(searchParams.get("driverB") ?? "")
@@ -166,17 +98,18 @@ function CompareContent() {
   const colorA = standingA ? getTeamColor(standingA.constructorName.toLowerCase().replace(/ /g, "_")) : "#6B7280"
   const colorB = standingB ? getTeamColor(standingB.constructorName.toLowerCase().replace(/ /g, "_")) : "#6B7280"
 
-  function handleDuelTabClick() {
-    if (!isPremium) {
-      setShowPremiumModal(true)
-      return
-    }
-    setTab("duel")
-  }
+  // DUEL DESACTIVADO — descomentar para reactivar
+  // function handleDuelTabClick() {
+  //   if (!isPremium) {
+  //     setShowPremiumModal(true)
+  //     return
+  //   }
+  //   setTab("duel")
+  // }
 
   return (
     <div className="space-y-8">
-      {/* Tabs */}
+      {/* Tabs — pestaña Duelo desactivada; descomentar el bloque para reactivar */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
         <button
           onClick={() => setTab("compare")}
@@ -188,6 +121,7 @@ function CompareContent() {
         >
           Comparación
         </button>
+        {/* DUEL DESACTIVADO — descomentar para reactivar
         <button
           onClick={handleDuelTabClick}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
@@ -201,6 +135,7 @@ function CompareContent() {
             Premium
           </span>
         </button>
+        */}
       </div>
 
       {/* Tab: Comparación */}
@@ -257,17 +192,33 @@ function CompareContent() {
 
           {!loading && dataA && dataB && (
             <div className="space-y-8">
-              <CompareVerdict
-                nameA={fullNameA}
-                nameB={fullNameB}
-                summaryA={dataA.summary}
-                summaryB={dataB.summary}
-              />
+              {isPremium ? (
+                (() => {
+                  const winner = getCompareWinner(dataA.summary, dataB.summary)
+                  const winnerName = winner === "A" ? fullNameA : winner === "B" ? fullNameB : null
+                  return (
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-2xl px-5 py-3.5">
+                      <p className="text-sm font-bold text-indigo-700">
+                        {winnerName ? `${winnerName} está mejor actualmente` : "Están equilibrados actualmente"}
+                      </p>
+                    </div>
+                  )
+                })()
+              ) : (
+                <div className="bg-indigo-50 border border-indigo-100 rounded-2xl px-5 py-3.5">
+                  <p className="text-sm font-bold text-indigo-700">
+                    Se detectan diferencias entre los pilotos
+                  </p>
+                </div>
+              )}
               <CompareTable
                 nameA={fullNameA}
                 nameB={fullNameB}
                 summaryA={dataA.summary}
                 summaryB={dataB.summary}
+                resultsA={dataA.results}
+                resultsB={dataB.results}
+                isPremium={isPremium}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
@@ -292,14 +243,13 @@ function CompareContent() {
         </div>
       )}
 
-      {/* Tab: Duelo en pista (Premium) */}
-      {tab === "duel" && isPremium && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <TrackDuel drivers={drivers} />
-        </div>
-      )}
+      {/* DUEL DESACTIVADO — descomentar para reactivar
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        {tab === "duel" && isPremium && <TrackDuel drivers={drivers} />}
+      </div>
+      */}
 
-      {showPremiumModal && <PremiumModal onClose={() => setShowPremiumModal(false)} />}
+      {/* {showPremiumModal && <PremiumModal onClose={() => setShowPremiumModal(false)} />} */}
     </div>
   )
 }

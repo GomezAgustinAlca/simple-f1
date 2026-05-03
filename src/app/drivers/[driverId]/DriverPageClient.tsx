@@ -40,6 +40,28 @@ export function DriverPageClient({ results, summary, lastRace, prevRace, teammat
 
   return (
     <div className="space-y-10">
+      {/* Análisis rápido — premium gate */}
+      {isPremium ? (
+        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
+          <p className="text-sm font-semibold text-indigo-700 mb-2">Análisis rápido</p>
+          <p className="text-gray-800">Nivel actual: {summary.statusLabel}</p>
+          <p className="text-gray-600 text-sm mt-1">Motivo: {summary.summaryText}</p>
+        </div>
+      ) : (
+        <div className="relative">
+          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 select-none pointer-events-none">
+            <p className="text-sm font-semibold text-indigo-700 mb-2">Análisis rápido</p>
+            <p className="text-gray-800 blur-sm">Nivel actual: {summary.statusLabel}</p>
+            <p className="text-gray-600 text-sm mt-1 blur-sm">Motivo: {summary.summaryText}</p>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="bg-white/90 text-indigo-700 text-xs font-semibold px-4 py-2 rounded-full border border-indigo-200 shadow-sm">
+              Desbloqueá para ver el análisis completo
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Evolution chart */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
         <div className="flex items-center justify-between">

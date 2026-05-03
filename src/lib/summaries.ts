@@ -1,11 +1,11 @@
 import type { TrendType, DriverPerformanceSummary } from "@/types/f1"
 
 const texts: Record<TrendType, string> = {
-  UP: "Viene mejorando en las últimas carreras. Su posición promedio reciente es mejor que la etapa anterior.",
-  DOWN: "Su rendimiento reciente bajó respecto a carreras anteriores. Necesita recuperar consistencia.",
-  STABLE: "Se mantiene en una zona similar de rendimiento, sin grandes mejoras ni caídas.",
-  UNSTABLE: "Alterna buenos y malos resultados. Tiene velocidad, pero todavía no muestra regularidad.",
-  INSUFFICIENT_DATA: "Aún no hay suficientes carreras para evaluar una tendencia confiable.",
+  UP: "Viene mejorando en las últimas carreras.",
+  DOWN: "Su rendimiento bajó en las últimas carreras.",
+  STABLE: "Se mantiene en una zona similar de rendimiento.",
+  UNSTABLE: "Alterna buenos y resultados irregulares.",
+  INSUFFICIENT_DATA: "No hay suficientes carreras para evaluarlo.",
 }
 
 export function getSummaryText(trend: TrendType): string {

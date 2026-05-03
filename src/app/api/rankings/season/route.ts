@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { getDriverStandings } from "@/lib/jolpica"
 
 export async function GET(request: NextRequest) {
-  const year = parseInt(request.nextUrl.searchParams.get("year") ?? "2025")
+  const yearParam = request.nextUrl.searchParams.get("year") ?? "current"
+  const seasonParam: number | "current" = yearParam === "current" ? "current" : parseInt(yearParam)
 
-  const standings = await getDriverStandings(year)
+  const standings = await getDriverStandings(seasonParam)
 
   const entries = standings.map((s) => ({
     position: s.position,

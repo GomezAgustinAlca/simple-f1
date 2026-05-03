@@ -81,6 +81,58 @@ export function buildPerformanceSummary(
   }
 }
 
+export function interpretRecentPerformance(summary: DriverPerformanceSummary): string {
+  if (summary.lastFiveAveragePosition == null) return "Sin datos"
+  if (summary.racesCount - summary.dnfs < 3) return "Muestra limitada"
+  const avg = summary.lastFiveAveragePosition
+  if (avg <= 3) return "Top 3"
+  if (avg <= 5) return "Top 5"
+  if (avg <= 10) return "Top 10"
+  return "Fuera del Top 10"
+}
+
+export function getPerformanceLevel(avgSeason: number | null): string {
+  if (avgSeason == null) return "Incierto"
+  if (avgSeason <= 3) return "Alto"
+  if (avgSeason <= 6) return "Medio"
+  return "Bajo"
+}
+
+export function getTrend(lastResults: RaceResult[]): string {
+  const trend = calculateTrend(lastResults)
+  switch (trend) {
+    case "UP": return "Mejora"
+    case "DOWN": return "Empeora"
+    case "STABLE": return "Estable"
+    case "UNSTABLE": return "Estable"
+    case "INSUFFICIENT_DATA": return "Sin datos"
+  }
+}
+
+export function getRecentPerformance(avgLast5: number | null, racesCount: number): string {
+  if (racesCount < 3 || avgLast5 == null) return "Muestra limitada"
+  if (avgLast5 <= 3) return "Top 3"
+  if (avgLast5 <= 5) return "Top 5"
+  if (avgLast5 <= 10) return "Top 10"
+  return "Fuera del Top 10"
+}
+
+export function getCompareWinner(
+  summaryA: DriverPerformanceSummary,
+  summaryB: DriverPerformanceSummary
+): "A" | "B" | null {
+  const avgA = summaryA.seasonAveragePosition ?? 99
+  const avgB = summaryB.seasonAveragePosition ?? 99
+  const recentA = summaryA.lastFiveAveragePosition ?? 99
+  const recentB = summaryB.lastFiveAveragePosition ?? 99
+  const levelPoints = avgA < avgB ? 1 : avgA > avgB ? -1 : 0
+  const recentPoints = recentA < recentB ? 1 : recentA > recentB ? -1 : 0
+  const total = levelPoints + recentPoints
+  if (total > 0) return "A"
+  if (total < 0) return "B"
+  return null
+}
+
 export function buildTeammateComparison(
   driverId: string,
   results: RaceResult[],

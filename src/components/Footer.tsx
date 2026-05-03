@@ -23,7 +23,10 @@ export function Footer() {
         </nav>
         <div className="flex flex-col items-center gap-1 text-center">
           <p className="text-xs text-gray-400">
-            Simple F1 · Datos actualizados cada hora · Temporada 2026
+            Simple F1 · Datos actualizados cada hora · Temporada {new Date().getFullYear()}
+          </p>
+          <p className="text-xs text-gray-300">
+            Datos obtenidos desde Jolpica F1 API. Pueden existir demoras o inconsistencias temporales.
           </p>
         </div>
       </div>

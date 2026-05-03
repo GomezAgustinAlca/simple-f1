@@ -1,12 +1,14 @@
-import { SummaryBadge } from "@/components/SummaryBadge"
-import { TrendArrow } from "@/components/TrendArrow"
-import type { DriverPerformanceSummary } from "@/types/f1"
+import { getPerformanceLevel, getTrend, getRecentPerformance } from "@/lib/performance"
+import type { DriverPerformanceSummary, RaceResult } from "@/types/f1"
 
 interface CompareTableProps {
   nameA: string
   nameB: string
   summaryA: DriverPerformanceSummary
   summaryB: DriverPerformanceSummary
+  resultsA: RaceResult[]
+  resultsB: RaceResult[]
+  isPremium: boolean
 }
 
 function Cell({ value, better }: { value: string; better: boolean }) {
@@ -21,7 +23,14 @@ function Cell({ value, better }: { value: string; better: boolean }) {
   )
 }
 
-export function CompareTable({ nameA, nameB, summaryA, summaryB }: CompareTableProps) {
+export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resultsB, isPremium }: CompareTableProps) {
+  const levelA = getPerformanceLevel(summaryA.seasonAveragePosition)
+  const levelB = getPerformanceLevel(summaryB.seasonAveragePosition)
+  const trendA = getTrend(resultsA)
+  const trendB = getTrend(resultsB)
+  const recentA = getRecentPerformance(summaryA.lastFiveAveragePosition, summaryA.racesCount)
+  const recentB = getRecentPerformance(summaryB.lastFiveAveragePosition, summaryB.racesCount)
+
   const rows = [
     {
       label: "Puntos temporada",
@@ -30,20 +39,22 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB }: CompareTableP
       betterA: summaryA.totalPoints >= summaryB.totalPoints,
     },
     {
-      label: "Promedio últ. 5",
-      a: summaryA.lastFiveAveragePosition?.toFixed(1) ?? "—",
-      b: summaryB.lastFiveAveragePosition?.toFixed(1) ?? "—",
-      betterA:
-        (summaryA.lastFiveAveragePosition ?? 99) <=
-        (summaryB.lastFiveAveragePosition ?? 99),
+      label: "Nivel",
+      a: levelA,
+      b: levelB,
+      betterA: (summaryA.seasonAveragePosition ?? 99) <= (summaryB.seasonAveragePosition ?? 99),
     },
     {
-      label: "Promedio temporada",
-      a: summaryA.seasonAveragePosition?.toFixed(1) ?? "—",
-      b: summaryB.seasonAveragePosition?.toFixed(1) ?? "—",
-      betterA:
-        (summaryA.seasonAveragePosition ?? 99) <=
-        (summaryB.seasonAveragePosition ?? 99),
+      label: "Tendencia",
+      a: trendA,
+      b: trendB,
+      betterA: trendA === trendB ? true : trendA === "Mejora",
+    },
+    {
+      label: "Rendimiento reciente",
+      a: recentA,
+      b: recentB,
+      betterA: (summaryA.lastFiveAveragePosition ?? 99) <= (summaryB.lastFiveAveragePosition ?? 99),
     },
     {
       label: "Mejor resultado",
@@ -55,8 +66,7 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB }: CompareTableP
       label: "Carreras terminadas",
       a: String(summaryA.racesCount - summaryA.dnfs),
       b: String(summaryB.racesCount - summaryB.dnfs),
-      betterA:
-        summaryA.racesCount - summaryA.dnfs >= summaryB.racesCount - summaryB.dnfs,
+      betterA: summaryA.racesCount - summaryA.dnfs >= summaryB.racesCount - summaryB.dnfs,
     },
     {
       label: "DNFs",
@@ -66,50 +76,70 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB }: CompareTableP
     },
   ]
 
+  const aWins = rows.filter((r) => r.betterA).length
+  const bWins = rows.length - aWins
+  const advantageName = aWins > bWins ? nameA : bWins > aWins ? nameB : null
+  const winnerSummary = aWins > bWins ? summaryA : bWins > aWins ? summaryB : null
+
+  const conclusionTitle = advantageName ? `${advantageName} está mejor` : "Están equilibrados"
+  const conclusionMotivo = winnerSummary ? winnerSummary.summaryText : `${nameA} y ${nameB} muestran un nivel similar esta temporada.`
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-100">
-            <th className="py-4 px-4 text-left text-xs text-gray-400 uppercase tracking-wide font-medium">
-              Estadística
-            </th>
-            <th className="py-4 px-4 text-center text-sm font-bold text-gray-900 bg-gray-50">
-              {nameA}
-            </th>
-            <th className="py-4 px-4 text-center text-sm font-bold text-gray-900">
-              {nameB}
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-50">
-          {rows.map((row) => (
-            <tr key={row.label}>
-              <td className="py-4 px-4 text-sm text-gray-600">{row.label}</td>
-              <Cell value={row.a} better={row.betterA} />
-              <Cell value={row.b} better={!row.betterA} />
+    <div className="space-y-3">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-gray-100">
+              <th className="py-4 px-4 text-left text-xs text-gray-400 uppercase tracking-wide font-medium">
+                Estadística
+              </th>
+              <th className="py-4 px-4 text-center text-sm font-bold text-gray-900 bg-gray-50">
+                {nameA}
+              </th>
+              <th className="py-4 px-4 text-center text-sm font-bold text-gray-900">
+                {nameB}
+              </th>
             </tr>
-          ))}
-          <tr className="border-t border-gray-100">
-            <td className="py-4 px-4 text-sm text-gray-600">Tendencia</td>
-            <td className="py-4 px-4 text-center">
-              <TrendArrow trend={summaryA.trend} size="sm" />
-            </td>
-            <td className="py-4 px-4 text-center">
-              <TrendArrow trend={summaryB.trend} size="sm" />
-            </td>
-          </tr>
-          <tr>
-            <td className="py-4 px-4 text-sm text-gray-600">Estado</td>
-            <td className="py-4 px-4 text-center">
-              <SummaryBadge label={summaryA.statusLabel} />
-            </td>
-            <td className="py-4 px-4 text-center">
-              <SummaryBadge label={summaryB.statusLabel} />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {rows.map((row) => (
+              <tr key={row.label}>
+                <td className="py-4 px-4 text-sm text-gray-600">{row.label}</td>
+                <Cell value={row.a} better={row.betterA} />
+                <Cell value={row.b} better={!row.betterA} />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Premium conclusion */}
+      {isPremium ? (
+        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
+          <p className="text-sm font-semibold text-indigo-700 mb-1">{conclusionTitle}</p>
+          <p className="text-gray-600 text-sm">Motivo: {conclusionMotivo}</p>
+        </div>
+      ) : (
+        <a
+          href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative block cursor-pointer group"
+        >
+          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 select-none pointer-events-none">
+            <p className="text-sm font-semibold text-indigo-700 mb-1 blur-sm">{conclusionTitle}</p>
+            <p className="text-gray-600 text-sm blur-sm">Motivo: {conclusionMotivo}</p>
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl">
+            <span className="text-indigo-700 text-xs font-semibold text-center px-4">
+              Desbloqueá para ver quién está mejor y por qué
+            </span>
+            <span className="bg-indigo-600 text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-sm group-hover:bg-indigo-700 transition-colors">
+              Ver análisis completo →
+            </span>
+          </div>
+        </a>
+      )}
     </div>
   )
 }
