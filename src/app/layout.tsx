@@ -18,16 +18,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${geist.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-gray-50 text-gray-900 antialiased">
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3566646588692281"
+          crossOrigin="anonymous"
+          strategy="beforeInteractive"
+        />
         <AuthProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
         </AuthProvider>
-        <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3566646588692281"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   )
