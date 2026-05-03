@@ -5,7 +5,7 @@ import { nationalityFlag } from "@/lib/flags"
 import { DriverCard } from "@/components/DriverCard"
 import { DriverSelector } from "@/components/DriverSelector"
 import { PremiumBanner } from "@/components/PremiumBanner"
-import { AdSlot } from "@/components/AdSlot"
+import { AdBanner } from "@/components/AdBanner"
 
 const FEATURED_IDS = [
   "colapinto",
@@ -68,7 +68,7 @@ export default async function HomePage() {
         </p>
       </section>
 
-      <AdSlot slot="home-top" />
+      <AdBanner slot="3204857190" />
 
       {/* Featured drivers */}
       {featuredSummaries.length > 0 && (

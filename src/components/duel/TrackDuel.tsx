@@ -42,6 +42,8 @@ export function TrackDuel({ drivers }: { drivers: DriverStanding[] }) {
   const pathRef = useRef<SVGPathElement>(null)
   const carARef = useRef<SVGGElement>(null)
   const carBRef = useRef<SVGGElement>(null)
+  const photoARef = useRef<SVGGElement>(null)
+  const photoBRef = useRef<SVGGElement>(null)
 
   // Animation state refs (mutated only in handlers/effects)
   const rafRef = useRef<number>(0)
@@ -92,8 +94,13 @@ export function TrackDuel({ drivers }: { drivers: DriverStanding[] }) {
       progressARef.current = Math.min(progressARef.current + (dt * speedARef.current) / RACE_DURATION_SECS, 1)
       progressBRef.current = Math.min(progressBRef.current + (dt * speedBRef.current) / RACE_DURATION_SECS, 1)
 
-      // Position car along path with perpendicular offset so they don't overlap
-      const positionCar = (group: SVGGElement, progress: number, offsetSign: number) => {
+      // Position car and photo along path; photo uses translate only (no rotation)
+      const positionCar = (
+        group: SVGGElement,
+        photoGroup: SVGGElement | null,
+        progress: number,
+        offsetSign: number
+      ) => {
         const length = path.getTotalLength()
         const p = Math.min(progress, 1)
         const pos = path.getPointAtLength(p * length)
@@ -102,12 +109,18 @@ export function TrackDuel({ drivers }: { drivers: DriverStanding[] }) {
         const perpAngle = Math.atan2(pos2.y - pos.y, pos2.x - pos.x) + Math.PI / 2
         const ox = Math.cos(perpAngle) * 18 * offsetSign
         const oy = Math.sin(perpAngle) * 18 * offsetSign
-        group.setAttribute("transform", `translate(${pos.x + ox}, ${pos.y + oy}) rotate(${angle})`)
+        const tx = pos.x + ox
+        const ty = pos.y + oy
+        group.setAttribute("transform", `translate(${tx}, ${ty}) rotate(${angle})`)
         group.style.opacity = "1"
+        if (photoGroup) {
+          photoGroup.setAttribute("transform", `translate(${tx}, ${ty - 26})`)
+          photoGroup.style.opacity = "1"
+        }
       }
 
-      positionCar(carA, progressARef.current, 1)
-      positionCar(carB, progressBRef.current, -1)
+      positionCar(carA, photoARef.current, progressARef.current, 1)
+      positionCar(carB, photoBRef.current, progressBRef.current, -1)
 
       const nextKpIdx = passedKeypointsRef.current
       if (nextKpIdx < KEYPOINT_PERCENTS.length) {
@@ -156,6 +169,8 @@ export function TrackDuel({ drivers }: { drivers: DriverStanding[] }) {
     setStatsB(null)
     if (carARef.current) carARef.current.style.opacity = "0"
     if (carBRef.current) carBRef.current.style.opacity = "0"
+    if (photoARef.current) photoARef.current.style.opacity = "0"
+    if (photoBRef.current) photoBRef.current.style.opacity = "0"
   }
 
   useEffect(() => {
@@ -168,6 +183,8 @@ export function TrackDuel({ drivers }: { drivers: DriverStanding[] }) {
     passedKeypointsRef.current = 0
     if (carARef.current) carARef.current.style.opacity = "0"
     if (carBRef.current) carBRef.current.style.opacity = "0"
+    if (photoARef.current) photoARef.current.style.opacity = "0"
+    if (photoBRef.current) photoBRef.current.style.opacity = "0"
   }, [circuitId])
 
   async function handleStartDuel() {
@@ -217,6 +234,10 @@ export function TrackDuel({ drivers }: { drivers: DriverStanding[] }) {
   const nameA = standingA ? `${standingA.givenName} ${standingA.familyName}` : driverA
   const nameB = standingB ? `${standingB.givenName} ${standingB.familyName}` : driverB
   const canStart = driverA && driverB && circuitId && driverA !== driverB
+  const getInitials = (name: string) =>
+    name.split(" ").map(n => n[0] ?? "").join("").slice(0, 3).toUpperCase()
+  const initialsA = standingA ? getInitials(`${standingA.givenName} ${standingA.familyName}`) : "?"
+  const initialsB = standingB ? getInitials(`${standingB.givenName} ${standingB.familyName}`) : "?"
 
   return (
     <div className="space-y-6">
@@ -320,6 +341,12 @@ export function TrackDuel({ drivers }: { drivers: DriverStanding[] }) {
               carARef={carARef}
               carBRef={carBRef}
               pathRef={pathRef}
+              photoARef={photoARef}
+              photoBRef={photoBRef}
+              driverAId={driverA}
+              driverBId={driverB}
+              driverAInitials={initialsA}
+              driverBInitials={initialsB}
             />
 
             {phase === "ready" && (

@@ -11,6 +11,7 @@ import { RaceEvolutionChart } from "@/components/RaceEvolutionChart"
 import { RecentRaceTable } from "@/components/RecentRaceTable"
 import { TeammateComparisonCard } from "@/components/TeammateComparisonCard"
 import { PremiumBanner } from "@/components/PremiumBanner"
+import { AdBanner } from "@/components/AdBanner"
 import { DriverCard } from "@/components/DriverCard"
 import { DriverPageClient } from "./DriverPageClient"
 
@@ -167,6 +168,8 @@ export default async function DriverPage({ params }: Props) {
         <p className="text-sm font-semibold text-indigo-700 mb-1">Análisis rápido</p>
         <p className="text-gray-800">{summary.summaryText}</p>
       </div>
+
+      <AdBanner slot="3204857191" />
 
       {/* Charts — client component handles premium */}
       <DriverPageClient
