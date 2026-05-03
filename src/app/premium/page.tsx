@@ -1,207 +1,190 @@
-"use client"
+const CHECKOUT_URL = "https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
 
-import { useAuth } from "@/contexts/AuthContext"
+const freeItems = [
+  "Ves números sin contexto",
+  "No sabés quién está mejor realmente",
+  "Comparación incompleta",
+]
 
-const features = [
+const premiumItems = [
+  "Conclusiones automáticas",
+  "Sabés quién está mejor en segundos",
+  "Comparación con contexto real",
+  "Evolución clara",
+]
+
+const benefits = [
   {
-    title: "Histórico completo",
-    desc: "Accedé a todas las temporadas anteriores, no solo la actual.",
+    title: "Sabés quién está mejor, sin pensar.",
+    desc: "Te decimos directamente quién rinde mejor y por qué.",
   },
   {
-    title: "Comparador avanzado",
-    desc: "Compará pilotos a lo largo de múltiples temporadas con gráficos detallados.",
+    title: "Comparás pilotos en contexto real",
+    desc: "No solo números — el contexto que hace que los números tengan sentido.",
   },
   {
-    title: "Off-Season en vivo",
-    desc: "Noticias filtradas por piloto desde F1 Latam, Motorsport ES y SoyMotor.",
-  },
-  {
-    title: "Sin publicidad",
-    desc: "Experiencia limpia, sin banners ni interrupciones.",
-  },
-  {
-    title: "Rankings históricos",
-    desc: "Filtrá rankings por temporada y analizá evoluciones año a año.",
-  },
-  {
-    title: "Análisis extendido",
-    desc: "Posición de clasificación vs carrera, evolución dentro del equipo por temporada.",
+    title: "Seguís la evolución, no solo el resultado",
+    desc: "Ves cómo viene cada piloto, no solo cómo terminó la última carrera.",
   },
 ]
 
-const faq = [
-  {
-    q: "¿Qué pasa si no hay carreras en este momento?",
-    a: "Todas las funciones premium están disponibles siempre. En off-season podés ver el histórico completo y las últimas noticias.",
-  },
-  {
-    q: "¿Puedo cancelar cuando quiera?",
-    a: "Sí, podés cancelar en cualquier momento sin penalidades.",
-  },
-  {
-    q: "¿La versión free sigue siendo útil?",
-    a: "Totalmente. La versión free te da acceso a las últimas 5 carreras, tendencia actual y comparación vs compañero de equipo.",
-  },
-  {
-    q: "¿Qué métodos de pago aceptan?",
-    a: "Tarjetas de crédito y débito internacionales vía Stripe. Pronto más opciones.",
-  },
-]
+function MockCompareBlock() {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4 pointer-events-none select-none">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center font-black text-indigo-600 text-sm">VER</div>
+          <div>
+            <p className="font-bold text-gray-900 text-sm">Max Verstappen</p>
+            <p className="text-xs text-gray-400">Red Bull Racing</p>
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-gray-400 uppercase tracking-wide">vs</p>
+        </div>
+        <div className="flex items-center gap-3 flex-row-reverse">
+          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center font-black text-red-600 text-sm">NOR</div>
+          <div className="text-right">
+            <p className="font-bold text-gray-900 text-sm">Lando Norris</p>
+            <p className="text-xs text-gray-400">McLaren</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 text-center text-sm">
+        <div className="bg-gray-50 rounded-xl p-3">
+          <p className="font-black text-gray-900">2</p>
+          <p className="text-xs text-gray-400">Podios</p>
+        </div>
+        <div className="bg-indigo-50 rounded-xl p-3">
+          <p className="font-black text-indigo-700 text-xs">Tendencia</p>
+          <p className="text-xs text-gray-500 mt-0.5">↑ En mejora</p>
+        </div>
+        <div className="bg-gray-50 rounded-xl p-3">
+          <p className="font-black text-gray-900">3</p>
+          <p className="text-xs text-gray-400">Podios</p>
+        </div>
+      </div>
+
+      <div className="bg-indigo-50 rounded-xl p-3 space-y-1">
+        <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide">Conclusión automática</p>
+        <p className="text-sm text-gray-700">
+          Norris muestra una evolución más consistente en las últimas 5 carreras, con mejor ritmo en clasificación.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Evolución últimas 5 carreras</p>
+        <div className="flex items-end gap-1 h-12">
+          {[3, 1, 2, 4, 1].map((pos, i) => (
+            <div key={i} className="flex-1 bg-indigo-200 rounded-sm" style={{ height: `${(6 - pos) * 18}%` }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function PremiumPage() {
-  const { isPremium, togglePremium } = useAuth()
-
   return (
-    <div className="max-w-4xl mx-auto px-4 py-16 space-y-16">
-      {/* Hero */}
+    <div className="max-w-3xl mx-auto px-4 py-16 space-y-20">
+
+      {/* 1. HERO */}
       <section className="text-center space-y-6">
-        <div className="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide">
-          Simple F1 Premium
-        </div>
         <h1 className="text-4xl sm:text-5xl font-black text-gray-900 leading-tight">
-          Todo el análisis de F1
-          <br />
-          <span className="text-indigo-600">sin límites ni publicidad</span>
+          Dejá de mirar tablas.{" "}
+          <span className="text-indigo-600">Entendé quién está mejor en segundos.</span>
         </h1>
-        <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-          Histórico completo, comparador avanzado, noticias off-season y mucho más.
-          Por menos de lo que vale un café.
+        <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          Simple F1 te dice quién rinde mejor, por qué y cómo viene evolucionando.
         </p>
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <div className="bg-white border border-gray-200 rounded-2xl px-8 py-6 text-center shadow-sm">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Mensual</p>
-            <p className="text-4xl font-black text-gray-900">$2.99</p>
-            <p className="text-gray-400 text-sm mt-1">USD / mes</p>
-          </div>
-        </div>
-
-        {/* CTA */}
-        {isPremium ? (
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-6 py-3 rounded-2xl font-semibold">
-              Estás usando Simple F1 Premium
-            </div>
-            <p className="text-xs text-gray-400">
-              (Modo dev activo — hacé click en el toggle de la barra de navegación para cambiar)
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <button
-              onClick={togglePremium}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-4 rounded-2xl text-lg transition-colors shadow-lg shadow-indigo-200"
-            >
-              Suscribirse ahora →
-            </button>
-            <p className="text-xs text-gray-400">
-              Integración de pagos próximamente. Por ahora activá el modo premium para probar.
-            </p>
-          </div>
-        )}
-      </section>
-
-      {/* Features grid */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-black text-gray-900 text-center">¿Qué incluye?</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-3"
-            >
-              <h3 className="font-bold text-gray-900">{f.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
+        <p className="text-3xl font-black text-gray-900">
+          $2.99 <span className="text-base font-normal text-gray-400">USD/mes</span>
+        </p>
+        <div className="space-y-2">
+          <a
+            href={CHECKOUT_URL}
+            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-10 py-4 rounded-2xl text-lg transition-colors shadow-lg shadow-indigo-200"
+          >
+            Desbloquear Premium →
+          </a>
+          <p className="text-sm text-gray-500 font-medium">
+            Si hoy no lo ves claro, es porque te faltan estas vistas.
+          </p>
+          <p className="text-xs text-gray-400">Acceso inmediato. Cancelás cuando quieras.</p>
         </div>
       </section>
 
-      {/* Comparison */}
+      {/* 2. BLOQUE BLOQUEADO */}
+      <section className="relative">
+        <div className="blur-sm opacity-60">
+          <MockCompareBlock />
+        </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 rounded-2xl backdrop-blur-[2px] gap-4">
+          <p className="text-base font-bold text-gray-800 text-center px-4">
+            Desbloqueá la comparación completa con Premium
+          </p>
+          <a
+            href={CHECKOUT_URL}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-7 py-3 rounded-xl text-sm transition-colors shadow-md shadow-indigo-200"
+          >
+            Desbloquear Premium →
+          </a>
+        </div>
+      </section>
+
+      {/* 3. FREE vs PREMIUM */}
       <section className="space-y-6">
         <h2 className="text-2xl font-black text-gray-900 text-center">Free vs Premium</h2>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="py-4 px-6 text-left text-gray-400 font-medium">Función</th>
-                <th className="py-4 px-4 text-center text-gray-600 font-semibold">Free</th>
-                <th className="py-4 px-4 text-center text-indigo-700 font-bold bg-indigo-50">
-                  Premium
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {[
-                ["Últimas 5 carreras", true, true],
-                ["Tendencia y estado del piloto", true, true],
-                ["Comparación vs compañero (temporada actual)", true, true],
-                ["Campeonato de constructores", true, true],
-                ["Publicidad", "Sí", "No"],
-                ["Histórico de temporadas anteriores", false, true],
-                ["Comparador avanzado multi-temporada", false, true],
-                ["Noticias off-season filtradas por piloto", false, true],
-                ["Rankings históricos con filtro por año", false, true],
-                ["Análisis grid vs carrera", false, true],
-              ].map(([feat, free, premium]) => (
-                <tr key={String(feat)}>
-                  <td className="py-3 px-6 text-gray-700">{feat}</td>
-                  <td className="py-3 px-4 text-center">
-                    {free === true ? (
-                      <span className="text-green-500">✓</span>
-                    ) : free === false ? (
-                      <span className="text-gray-300">—</span>
-                    ) : (
-                      <span className="text-gray-500 text-xs">{free}</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-center bg-indigo-50">
-                    {premium === true ? (
-                      <span className="text-indigo-600">✓</span>
-                    ) : premium === false ? (
-                      <span className="text-gray-300">—</span>
-                    ) : (
-                      <span className="text-indigo-600 text-xs font-medium">{premium}</span>
-                    )}
-                  </td>
-                </tr>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4">
+            <p className="text-sm font-bold text-gray-400 uppercase tracking-wide">Free</p>
+            <ul className="space-y-3">
+              {freeItems.map((item) => (
+                <li key={item} className="flex items-start gap-2 text-gray-500 text-sm">
+                  <span className="mt-0.5 text-gray-300">—</span>
+                  {item}
+                </li>
               ))}
-            </tbody>
-          </table>
+            </ul>
+          </div>
+          <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-6 space-y-4">
+            <p className="text-sm font-bold text-indigo-600 uppercase tracking-wide">Premium</p>
+            <ul className="space-y-3">
+              {premiumItems.map((item) => (
+                <li key={item} className="flex items-start gap-2 text-gray-800 text-sm font-medium">
+                  <span className="mt-0.5 text-indigo-500">✓</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* 4. BENEFICIOS */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-black text-gray-900 text-center">Preguntas frecuentes</h2>
-        <div className="space-y-4">
-          {faq.map(({ q, a }) => (
-            <div key={q} className="bg-white border border-gray-100 rounded-2xl p-6 space-y-2">
-              <p className="font-semibold text-gray-900">{q}</p>
-              <p className="text-gray-500 text-sm leading-relaxed">{a}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {benefits.map((b) => (
+            <div key={b.title} className="bg-white border border-gray-100 rounded-2xl p-6 space-y-2 shadow-sm">
+              <p className="font-bold text-gray-900 leading-snug">{b.title}</p>
+              <p className="text-sm text-gray-500">{b.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Bottom CTA */}
+      {/* 5. CTA FINAL */}
       <section className="text-center space-y-4 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl p-10 text-white">
-        <h2 className="text-2xl font-black">Listo para ver más?</h2>
-        <p className="text-indigo-100">
-          Probá Simple F1 Premium y entendé la Fórmula 1 como nunca antes.
-        </p>
-        {!isPremium && (
-          <button
-            onClick={togglePremium}
-            className="bg-white text-indigo-700 font-bold px-8 py-3 rounded-xl hover:bg-indigo-50 transition-colors"
-          >
-            Activar Premium (dev) →
-          </button>
-        )}
-        {isPremium && (
-          <p className="text-indigo-200 text-sm">Premium activo en modo dev</p>
-        )}
+        <h2 className="text-2xl font-black">Probalo y entendé todo en segundos</h2>
+        <a
+          href={CHECKOUT_URL}
+          className="inline-block bg-white text-indigo-700 font-bold px-8 py-3 rounded-xl hover:bg-indigo-50 transition-colors"
+        >
+          Desbloquear Premium →
+        </a>
       </section>
+
     </div>
   )
 }
