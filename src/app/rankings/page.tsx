@@ -7,6 +7,7 @@ import { PremiumBanner } from "@/components/PremiumBanner"
 import { AdSlot } from "@/components/AdSlot"
 import { PremiumModal } from "@/components/PremiumModal"
 import { useAuth } from "@/contexts/AuthContext"
+import { getCircuitPerformance } from "@/lib/performance"
 import type { StatusLabel, TrendType, RaceResult, DriverPerformanceSummary } from "@/types/f1"
 
 interface RankingEntry {
@@ -185,9 +186,10 @@ interface DriverDetailPanelProps {
   isLoading: boolean
   hasError: boolean
   isPremium: boolean
+  historyResults: RaceResult[]
 }
 
-function DriverDetailPanel({ driverId, detail, isLoading, hasError, isPremium }: DriverDetailPanelProps) {
+function DriverDetailPanel({ driverId, detail, isLoading, hasError, isPremium, historyResults }: DriverDetailPanelProps) {
   return (
     <div className="rounded-b-2xl border border-gray-100 border-t-0 bg-gray-50 overflow-hidden">
       {isLoading && (
@@ -210,28 +212,68 @@ function DriverDetailPanel({ driverId, detail, isLoading, hasError, isPremium }:
 
       {!isLoading && !hasError && detail && (
         <div className="p-5 space-y-4">
-          {isPremium ? (
-            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Conclusión</p>
+          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Conclusión</p>
+            {isPremium ? (
               <p className="text-sm text-gray-800">{conclusionText(detail.summary)}</p>
-            </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-gray-800 blur-sm select-none flex-1">{conclusionText(detail.summary)}</p>
+                <a
+                  href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 text-xs font-semibold text-indigo-700 bg-white px-3 py-1.5 rounded-full border border-indigo-200 shadow-sm hover:shadow-md transition-shadow whitespace-nowrap"
+                >
+                  Ver por qué
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Circuitos fuertes / débiles — premium gate */}
+          {isPremium ? (
+            (() => {
+              const cp = getCircuitPerformance(detail.results, historyResults)
+              return (
+                <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 text-sm space-y-1">
+                  {cp.hasEnoughData ? (
+                    <>
+                      <p className="text-gray-600">
+                        Fuerte en:{" "}
+                        <span className="font-semibold text-gray-900">{cp.best.join(", ")}</span>
+                      </p>
+                      <p className="text-gray-600">
+                        Débil en:{" "}
+                        <span className="font-semibold text-gray-900">{cp.worst.join(", ")}</span>
+                      </p>
+                      {cp.usedHistorical && (
+                        <p className="text-xs text-gray-400 pt-0.5">Basado en histórico disponible</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-gray-400">Sin datos suficientes por circuito.</p>
+                  )}
+                </div>
+              )
+            })()
           ) : (
-            <a
-              href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block relative rounded-xl overflow-hidden cursor-pointer"
-            >
-              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 select-none">
-                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Conclusión</p>
-                <p className="text-sm text-gray-800 blur-sm">{conclusionText(detail.summary)}</p>
+            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm space-y-1">
+              <div className="flex items-center gap-3">
+                <p className="text-gray-600 blur-sm select-none flex-1">Fuerte en: <span className="font-semibold">Monza, Silverstone</span></p>
               </div>
-              <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-indigo-900/30 backdrop-blur-[1px]">
-                <span className="text-xs font-semibold text-white bg-indigo-600 px-3 py-1.5 rounded-full shadow">
-                  Desbloqueá para ver el análisis completo
-                </span>
+              <div className="flex items-center gap-3">
+                <p className="text-gray-600 blur-sm select-none flex-1">Débil en: <span className="font-semibold">Mónaco, Singapur</span></p>
               </div>
-            </a>
+              <a
+                href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 hover:text-indigo-900 transition-colors pt-0.5"
+              >
+                Entender el rendimiento →
+              </a>
+            </div>
           )}
 
           {detail.results.length > 0 ? (
@@ -533,6 +575,7 @@ export default function RankingsPage() {
   const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [detailsCache, setDetailsCache] = useState<Record<string, DetailState>>({})
+  const [historyCache, setHistoryCache] = useState<Record<string, RaceResult[]>>({})
   const [loadingDetail, setLoadingDetail] = useState<string | null>(null)
 
   useEffect(() => {
@@ -549,17 +592,26 @@ export default function RankingsPage() {
       return
     }
     setExpandedId(driverId)
-    if (detailsCache[driverId] || loadingDetail === driverId) return
-    setLoadingDetail(driverId)
-    try {
-      const r = await fetch(`/api/drivers/${driverId}/results`)
-      if (!r.ok) throw new Error()
-      const detail: DriverDetail = await r.json()
-      setDetailsCache((prev) => ({ ...prev, [driverId]: { data: detail, error: false } }))
-    } catch {
-      setDetailsCache((prev) => ({ ...prev, [driverId]: { data: null, error: true } }))
-    } finally {
-      setLoadingDetail(null)
+
+    if (!detailsCache[driverId] && loadingDetail !== driverId) {
+      setLoadingDetail(driverId)
+      try {
+        const r = await fetch(`/api/drivers/${driverId}/results`)
+        if (!r.ok) throw new Error()
+        const detail: DriverDetail = await r.json()
+        setDetailsCache((prev) => ({ ...prev, [driverId]: { data: detail, error: false } }))
+      } catch {
+        setDetailsCache((prev) => ({ ...prev, [driverId]: { data: null, error: true } }))
+      } finally {
+        setLoadingDetail(null)
+      }
+    }
+
+    if (isPremium && !historyCache[driverId]) {
+      fetch(`/api/drivers/${driverId}/history`)
+        .then((r) => r.json())
+        .then((d) => setHistoryCache((prev) => ({ ...prev, [driverId]: d.results ?? [] })))
+        .catch(() => {})
     }
   }
 
@@ -707,6 +759,7 @@ export default function RankingsPage() {
                         isLoading={loadingDetail === entry.driverId}
                         hasError={cached?.error ?? false}
                         isPremium={isPremium}
+                        historyResults={historyCache[entry.driverId] ?? []}
                       />
                     )}
                   </div>

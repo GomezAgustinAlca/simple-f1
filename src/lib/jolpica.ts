@@ -49,6 +49,7 @@ function parseRaceResults(data: any): RaceResult[] {
         round: parseInt(race.round),
         raceName: race.raceName,
         date: race.date,
+        circuitId: race.Circuit?.circuitId ?? "",
         circuitName: race.Circuit?.circuitName ?? "",
         driverId: r.Driver?.driverId ?? "",
         constructorId: r.Constructor?.constructorId ?? "",

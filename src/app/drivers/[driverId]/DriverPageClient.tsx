@@ -7,7 +7,8 @@ import { TeammateComparisonCard } from "@/components/TeammateComparisonCard"
 import { NewsCard } from "@/components/NewsCard"
 import { AdSlot } from "@/components/AdSlot"
 import { formatPosition, positionChange } from "@/lib/format"
-import { isDNF } from "@/lib/performance"
+import { isDNF, getConsistency, getCircuitTypePerformance, getGridPositionImpact, getCircuitPerformance } from "@/lib/performance"
+import { getPremiumSummaryText } from "@/lib/summaries"
 import type { RaceResult, DriverPerformanceSummary, TeammateComparison } from "@/types/f1"
 import type { NewsItem } from "@/types/news"
 import { useEffect, useState } from "react"
@@ -24,6 +25,38 @@ export function DriverPageClient({ results, summary, lastRace, prevRace, teammat
   const { isPremium } = useAuth()
   const [news, setNews] = useState<NewsItem[]>([])
   const [loadingNews, setLoadingNews] = useState(false)
+  const [historyResults, setHistoryResults] = useState<RaceResult[]>([])
+
+  useEffect(() => {
+    if (!isPremium) return
+    fetch(`/api/drivers/${summary.driverId}/history`)
+      .then((r) => r.json())
+      .then((d) => setHistoryResults(d.results ?? []))
+      .catch(() => {})
+  }, [isPremium, summary.driverId])
+
+  const premiumTrendExplanation = getPremiumSummaryText(summary.trend, summary.lastFiveAveragePosition)
+
+  const advancedMetrics = [
+    {
+      title: "Consistencia",
+      ...getConsistency(results),
+    },
+    {
+      title: "Tendencia",
+      label: summary.statusLabel,
+      explanation: summary.summaryText,
+      premiumExplanation: premiumTrendExplanation,
+    },
+    {
+      title: "Por tipo de circuito",
+      ...getCircuitTypePerformance(results),
+    },
+    {
+      title: "Vs posición de salida",
+      ...getGridPositionImpact(results),
+    },
+  ]
 
   useEffect(() => {
     if (!isPremium) return
@@ -40,27 +73,114 @@ export function DriverPageClient({ results, summary, lastRace, prevRace, teammat
 
   return (
     <div className="space-y-10">
-      {/* Análisis rápido — premium gate */}
-      {isPremium ? (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
-          <p className="text-sm font-semibold text-indigo-700 mb-2">Análisis rápido</p>
-          <p className="text-gray-800">Nivel actual: {summary.statusLabel}</p>
-          <p className="text-gray-600 text-sm mt-1">Motivo: {summary.summaryText}</p>
-        </div>
-      ) : (
-        <div className="relative">
-          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 select-none pointer-events-none">
-            <p className="text-sm font-semibold text-indigo-700 mb-2">Análisis rápido</p>
-            <p className="text-gray-800 blur-sm">Nivel actual: {summary.statusLabel}</p>
-            <p className="text-gray-600 text-sm mt-1 blur-sm">Motivo: {summary.summaryText}</p>
+      {/* Análisis rápido */}
+      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
+        <p className="text-sm font-semibold text-indigo-700 mb-2">Análisis rápido</p>
+        <p className="text-gray-800">Nivel actual: {summary.statusLabel}</p>
+        {isPremium ? (
+          <p className="text-gray-700 text-sm mt-2">{premiumTrendExplanation}</p>
+        ) : (
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-gray-600 text-sm blur-sm select-none flex-1">Motivo: {summary.summaryText}</p>
+            <a
+              href="/premium"
+              className="shrink-0 text-xs font-semibold text-indigo-700 bg-white px-3 py-1.5 rounded-full border border-indigo-200 shadow-sm hover:shadow-md transition-shadow whitespace-nowrap"
+            >
+              Ver por qué
+            </a>
           </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="bg-white/90 text-indigo-700 text-xs font-semibold px-4 py-2 rounded-full border border-indigo-200 shadow-sm">
-              Desbloqueá para ver el análisis completo
-            </span>
-          </div>
+        )}
+      </div>
+
+      {/* Perfil avanzado — premium gate */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <h2 className="font-bold text-gray-900">Perfil avanzado</h2>
+          <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">Premium</span>
         </div>
-      )}
+        <div className="grid grid-cols-2 gap-4">
+          {advancedMetrics.map((m) => (
+            <div key={m.title} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-1">
+              <p className="text-xs text-gray-400 uppercase tracking-wide">{m.title}</p>
+              <p className="text-sm font-semibold text-gray-900">{m.label}</p>
+              {isPremium ? (
+                <p className="text-xs text-gray-600">{m.premiumExplanation}</p>
+              ) : (
+                <p className="text-xs text-gray-500 blur-sm select-none">{m.explanation}</p>
+              )}
+            </div>
+          ))}
+        </div>
+        {!isPremium && (
+          <a
+            href="/premium"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 hover:text-indigo-900 transition-colors"
+          >
+            Entender el rendimiento →
+          </a>
+        )}
+      </section>
+
+      {/* Perfil por circuitos — premium gate */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <h2 className="font-bold text-gray-900">Perfil por circuitos</h2>
+          <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">Premium</span>
+        </div>
+        {isPremium ? (
+          (() => {
+            const cp = getCircuitPerformance(results, historyResults)
+            return cp.hasEnoughData ? (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full shrink-0">
+                    Mejor rendimiento
+                  </span>
+                  <p className="text-sm text-gray-800">{cp.best.join(", ")}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-full shrink-0">
+                    Peor rendimiento
+                  </span>
+                  <p className="text-sm text-gray-800">{cp.worst.join(", ")}</p>
+                </div>
+                {cp.usedHistorical && (
+                  <p className="text-xs text-gray-400 pt-1">Basado en histórico disponible</p>
+                )}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <p className="text-sm text-gray-400">
+                  Sin datos suficientes — se necesitan al menos 2 carreras en el mismo circuito.
+                </p>
+              </div>
+            )
+          })()
+        ) : (
+          <a
+            href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block relative group rounded-2xl overflow-hidden"
+          >
+            <div className="bg-white border border-gray-100 shadow-sm p-5 space-y-3 select-none pointer-events-none">
+              <div className="flex items-center gap-3">
+                <div className="w-28 h-5 bg-green-100 rounded-full" />
+                <div className="w-32 h-4 bg-gray-100 rounded" />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-28 h-5 bg-orange-100 rounded-full" />
+                <div className="w-24 h-4 bg-gray-100 rounded" />
+              </div>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-white/75 backdrop-blur-[2px]">
+              <span className="bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow group-hover:bg-indigo-700 transition-colors">
+                Desbloqueá en qué circuitos rinde mejor
+              </span>
+            </div>
+          </a>
+        )}
+      </section>
 
       {/* Evolution chart */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">

@@ -13,6 +13,7 @@ export interface RaceResult {
   round: number
   raceName: string
   date: string
+  circuitId: string
   circuitName: string
   driverId: string
   constructorId: string

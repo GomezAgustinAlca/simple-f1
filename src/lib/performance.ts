@@ -1,4 +1,5 @@
 import type { RaceResult, TrendType, StatusLabel, DriverPerformanceSummary, TeammateComparison } from "@/types/f1"
+import { getCircuitDisplayName } from "@/lib/circuits"
 
 export function isDNF(status: string): boolean {
   if (!status) return false
@@ -131,6 +132,213 @@ export function getCompareWinner(
   if (total > 0) return "A"
   if (total < 0) return "B"
   return null
+}
+
+const SLOW_CIRCUIT_KEYWORDS = ["monaco", "singapore", "hungary", "baku", "zandvoort", "abu dhabi", "mexico", "melbourne"]
+
+export function getConsistency(results: RaceResult[]): { label: string; explanation: string; premiumExplanation: string } {
+  const finished = results.filter((r) => !isDNF(r.status) && r.position != null)
+  if (finished.length < 3) return { label: "Sin datos", explanation: "Muestra insuficiente para calcular consistencia.", premiumExplanation: "Muestra insuficiente para calcular consistencia." }
+  const positions = finished.map((r) => r.position!)
+  const spread = Math.max(...positions) - Math.min(...positions)
+  const avgPos = avg(positions)
+  if (spread <= 3) {
+    let premiumExplanation: string
+    if (avgPos <= 5) premiumExplanation = "Regularidad de alto nivel: mantiene resultados sin caídas en la zona que importa."
+    else if (avgPos <= 10) premiumExplanation = "Alta consistencia, pero sin resultados altos. Predecible, no dominante."
+    else premiumExplanation = "Regular en posiciones bajas: la consistencia aquí no suma al campeonato."
+    return { label: "Alta", explanation: "Los resultados son muy regulares entre carreras.", premiumExplanation }
+  }
+  if (spread <= 7) return { label: "Media", explanation: "Hay variación moderada en los resultados.", premiumExplanation: "Variación moderada: puede subir, pero también caer. Sin un piso claro de rendimiento." }
+  return { label: "Baja", explanation: "Los resultados varían mucho de carrera a carrera.", premiumExplanation: "Alta irregularidad: cada carrera es impredecible. Falta de base para proyectar su rendimiento." }
+}
+
+export function getCircuitTypePerformance(results: RaceResult[]): { label: string; explanation: string; premiumExplanation: string } {
+  const finished = results.filter((r) => !isDNF(r.status) && r.position != null)
+  const slow = finished.filter((r) =>
+    SLOW_CIRCUIT_KEYWORDS.some((kw) => r.circuitName.toLowerCase().includes(kw))
+  )
+  const fast = finished.filter((r) =>
+    !SLOW_CIRCUIT_KEYWORDS.some((kw) => r.circuitName.toLowerCase().includes(kw))
+  )
+  if (slow.length === 0 && fast.length === 0) return { label: "Sin datos", explanation: "No hay carreras para comparar.", premiumExplanation: "No hay carreras para comparar." }
+  if (slow.length === 0) return { label: "Solo rápidos", explanation: "Aún no compitió en circuitos lentos esta temporada.", premiumExplanation: "Aún no compitió en circuitos lentos esta temporada." }
+  if (fast.length === 0) return { label: "Solo lentos", explanation: "Aún no compitió en circuitos rápidos esta temporada.", premiumExplanation: "Aún no compitió en circuitos rápidos esta temporada." }
+  const avgSlow = slow.reduce((s, r) => s + r.position!, 0) / slow.length
+  const avgFast = fast.reduce((s, r) => s + r.position!, 0) / fast.length
+  const diff = avgFast - avgSlow
+  if (diff > 2) return {
+    label: "Mejor en lentos",
+    explanation: `Promedia P${Math.round(avgSlow)} en circuitos lentos y P${Math.round(avgFast)} en rápidos.`,
+    premiumExplanation: `Aprovecha circuitos donde el auto importa menos. P${Math.round(avgSlow)} en lentos vs P${Math.round(avgFast)} en rápidos — terreno favorable para él.`,
+  }
+  if (diff < -2) return {
+    label: "Mejor en rápidos",
+    explanation: `Promedia P${Math.round(avgFast)} en circuitos rápidos y P${Math.round(avgSlow)} en lentos.`,
+    premiumExplanation: `Rinde en circuitos que exigen más. P${Math.round(avgFast)} en rápidos vs P${Math.round(avgSlow)} en lentos — donde la diferencia entre pilotos se amplifica.`,
+  }
+  return {
+    label: "Equilibrado",
+    explanation: "Rinde de forma similar en ambos tipos de circuito.",
+    premiumExplanation: "Sin ventaja diferencial por tipo de circuito. No destaca en ningún terreno específico.",
+  }
+}
+
+export function getGridPositionImpact(results: RaceResult[]): { label: string; explanation: string; premiumExplanation: string } {
+  const valid = results.filter(
+    (r) => !isDNF(r.status) && r.position != null && r.grid != null && r.grid > 0
+  )
+  if (valid.length < 2) return { label: "Sin datos", explanation: "Muestra insuficiente.", premiumExplanation: "Muestra insuficiente." }
+  const gains = valid.map((r) => r.grid! - r.position!)
+  const avgGain = gains.reduce((s, n) => s + n, 0) / gains.length
+  const rounded = Math.abs(avgGain).toFixed(1)
+  if (avgGain > 1) return {
+    label: "Gana posiciones",
+    explanation: `Mejora en promedio ${rounded} posición(es) respecto a la salida.`,
+    premiumExplanation: `Adelanta ${rounded} posición(es) en promedio: ritmo real en carrera más allá de donde clasifica.`,
+  }
+  if (avgGain < -1) return {
+    label: "Pierde posiciones",
+    explanation: `Pierde en promedio ${rounded} posición(es) respecto a la salida.`,
+    premiumExplanation: `Retrocede ${rounded} posición(es) desde la salida. Su resultado de carrera es peor que su clasificación — déficit de ritmo o estrategia.`,
+  }
+  return {
+    label: "Mantiene posición",
+    explanation: "Suele terminar cerca de donde sale en parrilla.",
+    premiumExplanation: "No logra mejorar posiciones en carrera. Su resultado final depende casi exclusivamente de la clasificación.",
+  }
+}
+
+export interface CircuitPerformanceResult {
+  best: string[]
+  worst: string[]
+  hasEnoughData: boolean
+  usedHistorical: boolean
+}
+
+function computeCircuitQualified(results: RaceResult[]) {
+  const finished = results.filter((r) => !isDNF(r.status) && r.position != null)
+  const byCircuit: Record<string, { total: number; count: number; name: string }> = {}
+  for (const r of finished) {
+    const key = r.circuitId || r.circuitName
+    const name = getCircuitDisplayName(r.circuitId, r.circuitName)
+    if (!byCircuit[key]) byCircuit[key] = { total: 0, count: 0, name }
+    byCircuit[key].total += r.position!
+    byCircuit[key].count++
+  }
+  return Object.values(byCircuit)
+    .filter((v) => v.count >= 2)
+    .map((v) => ({ name: v.name, avg: v.total / v.count }))
+    .sort((a, b) => a.avg - b.avg)
+}
+
+function buildCircuitResult(
+  qualified: { name: string; avg: number }[],
+  usedHistorical: boolean
+): CircuitPerformanceResult {
+  const take = Math.min(2, qualified.length)
+  return {
+    best: qualified.slice(0, take).map((c) => c.name),
+    worst: qualified.slice(-take).map((c) => c.name).reverse(),
+    hasEnoughData: true,
+    usedHistorical,
+  }
+}
+
+export function getCircuitPerformance(
+  currentResults: RaceResult[],
+  historicalResults: RaceResult[] = []
+): CircuitPerformanceResult {
+  const currentQualified = computeCircuitQualified(currentResults)
+  if (currentQualified.length > 0) {
+    return buildCircuitResult(currentQualified, false)
+  }
+
+  if (historicalResults.length === 0) {
+    return { best: [], worst: [], hasEnoughData: false, usedHistorical: false }
+  }
+
+  const combinedQualified = computeCircuitQualified([...currentResults, ...historicalResults])
+  if (combinedQualified.length === 0) {
+    return { best: [], worst: [], hasEnoughData: false, usedHistorical: true }
+  }
+
+  return buildCircuitResult(combinedQualified, true)
+}
+
+export interface CircuitRaceDetail {
+  gpName: string
+  year: number
+  posA: number
+  posB: number
+}
+
+export interface CircuitAdvantage {
+  circuit: string
+  winner: string
+  posA: number
+  posB: number
+  races: CircuitRaceDetail[]
+}
+
+export function getCircuitAdvantage(
+  currentA: RaceResult[],
+  currentB: RaceResult[],
+  nameA: string,
+  nameB: string,
+  historicalA: RaceResult[] = [],
+  historicalB: RaceResult[] = []
+): { advantages: CircuitAdvantage[]; usedHistorical: boolean } {
+  const mergedA = [...currentA, ...historicalA]
+  const mergedB = [...currentB, ...historicalB]
+
+  const avgByCircuit = (races: RaceResult[]) => {
+    const finished = races.filter((r) => !isDNF(r.status) && r.position != null)
+    const map: Record<string, { total: number; count: number; displayName: string; raceDetails: Array<{ gpName: string; year: number; pos: number }> }> = {}
+    for (const r of finished) {
+      const key = r.circuitId || r.circuitName
+      const displayName = getCircuitDisplayName(r.circuitId, r.circuitName)
+      if (!map[key]) map[key] = { total: 0, count: 0, displayName, raceDetails: [] }
+      map[key].total += r.position!
+      map[key].count++
+      map[key].raceDetails.push({ gpName: r.raceName, year: r.season, pos: r.position! })
+    }
+    return map
+  }
+
+  const mapA = avgByCircuit(mergedA)
+  const mapB = avgByCircuit(mergedB)
+
+  const advantages: CircuitAdvantage[] = []
+  for (const [key, a] of Object.entries(mapA)) {
+    const b = mapB[key]
+    if (!b) continue
+    const avgA = a.total / a.count
+    const avgB = b.total / b.count
+    if (Math.abs(avgA - avgB) < 1) continue
+
+    const detailsByYear: Record<number, CircuitRaceDetail> = {}
+    for (const ra of a.raceDetails) {
+      detailsByYear[ra.year] = { gpName: ra.gpName, year: ra.year, posA: ra.pos, posB: 0 }
+    }
+    for (const rb of b.raceDetails) {
+      if (detailsByYear[rb.year]) detailsByYear[rb.year].posB = rb.pos
+    }
+    const races = Object.values(detailsByYear)
+      .filter((r) => r.posB > 0)
+      .sort((x, y) => y.year - x.year)
+
+    advantages.push({
+      circuit: a.displayName,
+      winner: avgA < avgB ? nameA : nameB,
+      posA: Math.round(avgA),
+      posB: Math.round(avgB),
+      races,
+    })
+  }
+
+  const usedHistorical = historicalA.length > 0 || historicalB.length > 0
+  return { advantages, usedHistorical }
 }
 
 export function buildTeammateComparison(

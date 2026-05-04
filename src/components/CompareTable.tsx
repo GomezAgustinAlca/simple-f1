@@ -1,4 +1,5 @@
 import { getPerformanceLevel, getTrend, getRecentPerformance } from "@/lib/performance"
+import { getCompareMotivo } from "@/lib/summaries"
 import type { DriverPerformanceSummary, RaceResult } from "@/types/f1"
 
 interface CompareTableProps {
@@ -79,10 +80,9 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resul
   const aWins = rows.filter((r) => r.betterA).length
   const bWins = rows.length - aWins
   const advantageName = aWins > bWins ? nameA : bWins > aWins ? nameB : null
-  const winnerSummary = aWins > bWins ? summaryA : bWins > aWins ? summaryB : null
 
-  const conclusionTitle = advantageName ? `${advantageName} está mejor` : "Están equilibrados"
-  const conclusionMotivo = winnerSummary ? winnerSummary.summaryText : `${nameA} y ${nameB} muestran un nivel similar esta temporada.`
+  const conclusionTitle = advantageName ? `${advantageName} está mejor actualmente` : "Están equilibrados actualmente"
+  const conclusionMotivo = getCompareMotivo(summaryA, summaryB, nameA, nameB, advantageName)
 
   return (
     <div className="space-y-3">
@@ -113,33 +113,25 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resul
         </table>
       </div>
 
-      {/* Premium conclusion */}
-      {isPremium ? (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
-          <p className="text-sm font-semibold text-indigo-700 mb-1">{conclusionTitle}</p>
+      {/* Conclusion */}
+      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
+        <p className="text-sm font-semibold text-indigo-700 mb-1">{conclusionTitle}</p>
+        {isPremium ? (
           <p className="text-gray-600 text-sm">Motivo: {conclusionMotivo}</p>
-        </div>
-      ) : (
-        <a
-          href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="relative block cursor-pointer group"
-        >
-          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 select-none pointer-events-none">
-            <p className="text-sm font-semibold text-indigo-700 mb-1 blur-sm">{conclusionTitle}</p>
-            <p className="text-gray-600 text-sm blur-sm">Motivo: {conclusionMotivo}</p>
+        ) : (
+          <div className="flex items-center gap-3">
+            <p className="text-gray-600 text-sm blur-sm select-none flex-1">Motivo: {conclusionMotivo}</p>
+            <a
+              href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-xs font-semibold text-indigo-700 bg-white px-3 py-1.5 rounded-full border border-indigo-200 shadow-sm hover:shadow-md transition-shadow whitespace-nowrap"
+            >
+              Ver por qué
+            </a>
           </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl">
-            <span className="text-indigo-700 text-xs font-semibold text-center px-4">
-              Desbloqueá para ver quién está mejor y por qué
-            </span>
-            <span className="bg-indigo-600 text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-sm group-hover:bg-indigo-700 transition-colors">
-              Ver análisis completo →
-            </span>
-          </div>
-        </a>
-      )}
+        )}
+      </div>
     </div>
   )
 }

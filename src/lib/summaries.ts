@@ -12,6 +12,25 @@ export function getSummaryText(trend: TrendType): string {
   return texts[trend]
 }
 
+export function getPremiumSummaryText(trend: TrendType, avgPosition?: number | null): string {
+  if (trend === "INSUFFICIENT_DATA") return "Temporada muy corta para sacar conclusiones sólidas."
+  if (trend === "UNSTABLE") return "Alternancia sin dirección clara. Imposible predecir su próximo resultado. Sin base competitiva estable."
+  if (trend === "UP") {
+    if (avgPosition != null && avgPosition <= 5) return "Mejora sostenida hacia los puestos de honor. Está en la tendencia correcta."
+    return "Mejora en curso, pero aún fuera del top. Progresa sin haber llegado a donde importa."
+  }
+  if (trend === "DOWN") {
+    if (avgPosition != null && avgPosition <= 5) return "Pierde terreno desde posiciones altas. Señal de alerta en un piloto que debería rendir más."
+    return "Caída sostenida: no es solo un resultado aislado. Pierde posiciones que antes conseguía."
+  }
+  // STABLE
+  if (avgPosition != null) {
+    if (avgPosition <= 5) return "Consistente en la zona alta — la regularidad es su activo competitivo."
+    if (avgPosition <= 10) return "Estable pero por debajo del top. La constancia no alcanza para subir posiciones."
+  }
+  return "Regular en posiciones bajas. La estabilidad aquí no es una ventaja competitiva."
+}
+
 export function enrichSummary(summary: DriverPerformanceSummary): DriverPerformanceSummary {
   return { ...summary, summaryText: getSummaryText(summary.trend) }
 }
@@ -25,4 +44,48 @@ export function getRaceRowLabel(
   if (diff > 0) return "mejoró"
   if (diff < 0) return "empeoró"
   return "igual"
+}
+
+export function getCompareMotivo(
+  summaryA: DriverPerformanceSummary,
+  summaryB: DriverPerformanceSummary,
+  nameA: string,
+  nameB: string,
+  winnerName: string | null
+): string {
+  if (!winnerName) {
+    return `${nameA} y ${nameB} muestran indicadores similares esta temporada.`
+  }
+
+  const isAWinner = winnerName === nameA
+  const w = isAWinner ? summaryA : summaryB
+  const l = isAWinner ? summaryB : summaryA
+
+  const reasons: string[] = []
+
+  const avgW = w.seasonAveragePosition
+  const avgL = l.seasonAveragePosition
+  if (avgW != null && avgL != null && avgL - avgW >= 0.5) {
+    reasons.push(`mejor promedio de posiciones (${avgW.toFixed(1)} vs ${avgL.toFixed(1)})`)
+  }
+
+  const recentW = w.lastFiveAveragePosition
+  const recentL = l.lastFiveAveragePosition
+  if (recentW != null && recentL != null && recentL - recentW >= 1) {
+    reasons.push(`mejor rendimiento reciente`)
+  }
+
+  if (w.dnfs < l.dnfs) {
+    reasons.push(`menor número de abandonos (${w.dnfs} vs ${l.dnfs})`)
+  }
+
+  if (w.trend === "UP" && l.trend !== "UP") {
+    reasons.push(`tendencia positiva`)
+  }
+
+  if (reasons.length === 0) {
+    return `${winnerName} tiene ventaja en el conjunto de métricas de la temporada.`
+  }
+
+  return `${winnerName} destaca por ${reasons.join(", ")}.`
 }
