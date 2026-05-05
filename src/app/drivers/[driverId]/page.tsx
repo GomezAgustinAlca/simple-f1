@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getDriverResults, getDriverStandings, getRaceResults, getCurrentSeasonYear } from "@/lib/jolpica"
 import { buildPerformanceSummary, buildTeammateComparison, getPerformanceLevel, getTrend, getRecentPerformance } from "@/lib/performance"
-import { enrichSummary } from "@/lib/summaries"
+import { enrichSummary, getDriverSnapshot } from "@/lib/summaries"
 import { formatPosition } from "@/lib/format"
 import { nationalityFlag } from "@/lib/flags"
 import { DriverAvatar } from "@/components/DriverAvatar"
@@ -126,6 +126,35 @@ export default async function DriverPage({ params }: Props) {
           )}
         </div>
       </div>
+
+      {/* Driver snapshot */}
+      {(() => {
+        const snapshot = getDriverSnapshot(summary)
+        const headlineClass =
+          snapshot.headlineColor === "green" ? "text-green-600" :
+          snapshot.headlineColor === "red" ? "text-red-500" :
+          snapshot.headlineColor === "amber" ? "text-amber-500" :
+          "text-gray-700"
+        return (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-5 space-y-3">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Resumen del piloto</p>
+            <p className={`text-2xl font-black ${headlineClass}`}>{snapshot.headline}</p>
+            <ul className="space-y-1.5">
+              {snapshot.bullets.map((bullet, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                  <span className="text-indigo-300 select-none mt-0.5">—</span>
+                  <span>{bullet}</span>
+                </li>
+              ))}
+            </ul>
+            {snapshot.weakness && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                {snapshot.weakness}
+              </p>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

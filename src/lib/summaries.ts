@@ -1,5 +1,53 @@
 import type { TrendType, DriverPerformanceSummary } from "@/types/f1"
 
+export function getDriverSnapshot(summary: DriverPerformanceSummary): {
+  headline: string
+  headlineColor: "green" | "red" | "amber" | "gray"
+  bullets: string[]
+  weakness?: string
+} {
+  const { trend, lastFiveAveragePosition, seasonAveragePosition, bestFinish, dnfs, racesCount } = summary
+
+  const headlineMap: Record<TrendType, { text: string; color: "green" | "red" | "amber" | "gray" }> = {
+    UP: { text: "Mejorando", color: "green" },
+    DOWN: { text: "En caída", color: "red" },
+    STABLE: { text: "Estable", color: "gray" },
+    UNSTABLE: { text: "Irregular", color: "amber" },
+    INSUFFICIENT_DATA: { text: "Pocos datos aún", color: "gray" },
+  }
+  const { text: headline, color: headlineColor } = headlineMap[trend]
+
+  const bullets: string[] = []
+
+  if (lastFiveAveragePosition != null) {
+    const avg = lastFiveAveragePosition.toFixed(1)
+    const suffix = trend === "UP" ? " — viene al alza" : trend === "DOWN" ? " — viene bajando" : ""
+    bullets.push(`Promedio últimas carreras: P${avg}${suffix}`)
+  }
+
+  if (bestFinish != null) {
+    const qualifier = bestFinish <= 3 ? " (podio)" : bestFinish <= 10 ? " (top 10)" : ""
+    bullets.push(`Mejor resultado de la temporada: P${bestFinish}${qualifier}`)
+  }
+
+  if (racesCount > 0) {
+    if (dnfs === 0) {
+      bullets.push(`Terminó las ${racesCount} carrera${racesCount !== 1 ? "s" : ""} sin abandonos`)
+    } else {
+      bullets.push(`${dnfs} abandono${dnfs !== 1 ? "s" : ""} en ${racesCount} carrera${racesCount !== 1 ? "s" : ""}`)
+    }
+  }
+
+  let weakness: string | undefined
+  if (dnfs >= 2) {
+    weakness = `Fiabilidad: ${dnfs} abandonos — un punto a resolver`
+  } else if (trend === "DOWN" && seasonAveragePosition != null && seasonAveragePosition > 12) {
+    weakness = "Aún lejos de los puntos en la mayoría de carreras"
+  }
+
+  return { headline, headlineColor, bullets: bullets.slice(0, 3), weakness }
+}
+
 const texts: Record<TrendType, string> = {
   UP: "Viene mejorando en las últimas carreras.",
   DOWN: "Su rendimiento bajó en las últimas carreras.",

@@ -10,11 +10,11 @@ interface CompareTableProps {
   resultsB: RaceResult[]
 }
 
-function Cell({ value, better }: { value: string; better: boolean }) {
+function Cell({ value, winner }: { value: string; winner: boolean }) {
   return (
     <td
       className={`py-2.5 px-3 text-center font-semibold text-sm ${
-        better ? "text-indigo-700 bg-indigo-50" : "text-gray-700"
+        winner ? "text-blue-700 bg-blue-50" : "text-gray-700"
       }`}
     >
       {value}
@@ -30,77 +30,91 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resul
   const recentA = getRecentPerformance(summaryA.lastFiveAveragePosition, summaryA.racesCount)
   const recentB = getRecentPerformance(summaryB.lastFiveAveragePosition, summaryB.racesCount)
 
+  const posA = summaryA.lastFiveAveragePosition ?? 99
+  const posB = summaryB.lastFiveAveragePosition ?? 99
+  const bestA = summaryA.bestFinish ?? 99
+  const bestB = summaryB.bestFinish ?? 99
+  const finishedA = summaryA.racesCount - summaryA.dnfs
+  const finishedB = summaryB.racesCount - summaryB.dnfs
+
   const rows = [
     {
       label: "Puntos temporada",
       a: String(summaryA.totalPoints),
       b: String(summaryB.totalPoints),
-      betterA: summaryA.totalPoints >= summaryB.totalPoints,
-    },
-    {
-      label: "Nivel",
-      a: levelA,
-      b: levelB,
-      betterA: (summaryA.seasonAveragePosition ?? 99) <= (summaryB.seasonAveragePosition ?? 99),
-    },
-    {
-      label: "Tendencia",
-      a: trendA,
-      b: trendB,
-      betterA: trendA === trendB ? true : trendA === "Mejora",
+      winnerA: summaryA.totalPoints > summaryB.totalPoints,
+      winnerB: summaryB.totalPoints > summaryA.totalPoints,
     },
     {
       label: "Rendimiento reciente",
       a: recentA,
       b: recentB,
-      betterA: (summaryA.lastFiveAveragePosition ?? 99) <= (summaryB.lastFiveAveragePosition ?? 99),
+      winnerA: posA < posB,
+      winnerB: posB < posA,
     },
     {
       label: "Mejor resultado",
       a: summaryA.bestFinish != null ? `P${summaryA.bestFinish}` : "—",
       b: summaryB.bestFinish != null ? `P${summaryB.bestFinish}` : "—",
-      betterA: (summaryA.bestFinish ?? 99) <= (summaryB.bestFinish ?? 99),
+      winnerA: bestA < bestB,
+      winnerB: bestB < bestA,
+    },
+    {
+      label: "Nivel",
+      a: levelA,
+      b: levelB,
+      winnerA: (summaryA.seasonAveragePosition ?? 99) < (summaryB.seasonAveragePosition ?? 99),
+      winnerB: (summaryB.seasonAveragePosition ?? 99) < (summaryA.seasonAveragePosition ?? 99),
+    },
+    {
+      label: "Tendencia",
+      a: trendA,
+      b: trendB,
+      winnerA: trendA !== trendB && trendA === "Mejora",
+      winnerB: trendA !== trendB && trendB === "Mejora",
     },
     {
       label: "Carreras terminadas",
-      a: String(summaryA.racesCount - summaryA.dnfs),
-      b: String(summaryB.racesCount - summaryB.dnfs),
-      betterA: summaryA.racesCount - summaryA.dnfs >= summaryB.racesCount - summaryB.dnfs,
+      a: String(finishedA),
+      b: String(finishedB),
+      winnerA: finishedA > finishedB,
+      winnerB: finishedB > finishedA,
     },
     {
-      label: "DNFs",
+      label: "Abandonos",
       a: String(summaryA.dnfs),
       b: String(summaryB.dnfs),
-      betterA: summaryA.dnfs <= summaryB.dnfs,
+      winnerA: summaryA.dnfs < summaryB.dnfs,
+      winnerB: summaryB.dnfs < summaryA.dnfs,
     },
   ]
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-100">
-              <th className="py-3 px-3 text-left text-xs text-gray-400 uppercase tracking-wide font-medium">
-                Estadística
-              </th>
-              <th className="py-3 px-3 text-center text-sm font-bold text-gray-900 bg-gray-50">
-                {nameA}
-              </th>
-              <th className="py-3 px-3 text-center text-sm font-bold text-gray-900">
-                {nameB}
-              </th>
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-gray-100">
+            <th className="py-3 px-3 text-left text-xs text-gray-400 uppercase tracking-wide font-medium">
+              Estadística
+            </th>
+            <th className="py-3 px-3 text-center text-sm font-bold text-gray-900 bg-gray-50">
+              {nameA}
+            </th>
+            <th className="py-3 px-3 text-center text-sm font-bold text-gray-900">
+              {nameB}
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-50">
+          {rows.map((row) => (
+            <tr key={row.label}>
+              <td className="py-2.5 px-3 text-sm text-gray-600">{row.label}</td>
+              <Cell value={row.a} winner={row.winnerA} />
+              <Cell value={row.b} winner={row.winnerB} />
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {rows.map((row) => (
-              <tr key={row.label}>
-                <td className="py-2.5 px-3 text-sm text-gray-600">{row.label}</td>
-                <Cell value={row.a} better={row.betterA} />
-                <Cell value={row.b} better={!row.betterA} />
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }

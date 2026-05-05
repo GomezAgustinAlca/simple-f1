@@ -46,7 +46,7 @@ export function RecentRaceTable({ results }: RecentRaceTableProps) {
                 </td>
                 <td className="py-3 pr-4 font-semibold text-gray-900">
                   {dnf ? (
-                    <span className="text-red-500">DNF</span>
+                    <span className="text-red-500">Abandonó</span>
                   ) : (
                     formatPosition(r.position)
                   )}

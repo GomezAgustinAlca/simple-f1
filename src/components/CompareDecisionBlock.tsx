@@ -113,12 +113,28 @@ export function CompareDecisionBlock({ nameA, nameB, summaryA, summaryB }: Props
   const decision = getDecision(nameA, nameB, summaryA, summaryB)
 
   if (decision.winner === null) {
+    const fewRaces = summaryA.racesCount < 5 || summaryB.racesCount < 5
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
-        <p className="text-xl font-semibold text-gray-700">Comparación pareja con datos actuales</p>
-        <p className="text-sm text-gray-400 mt-1">
-          Los datos disponibles no muestran una ventaja clara entre los dos pilotos.
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-3">
+        <p className="text-xl font-semibold text-gray-700">
+          Todavía no hay suficiente información para comparar con confianza
         </p>
+        <ul className="space-y-1.5">
+          <li className="flex items-start gap-2 text-sm text-gray-500">
+            <span className="text-gray-400 mt-0.5 shrink-0">•</span>
+            Pocas carreras disputadas en la temporada
+          </li>
+          <li className="flex items-start gap-2 text-sm text-gray-500">
+            <span className="text-gray-400 mt-0.5 shrink-0">•</span>
+            Los resultados aún no muestran una tendencia clara
+          </li>
+          {fewRaces && (
+            <li className="flex items-start gap-2 text-sm text-gray-500">
+              <span className="text-gray-400 mt-0.5 shrink-0">•</span>
+              Puede cambiar rápidamente en próximas carreras
+            </li>
+          )}
+        </ul>
       </div>
     )
   }
