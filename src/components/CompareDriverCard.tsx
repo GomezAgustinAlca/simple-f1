@@ -22,6 +22,7 @@ export function CompareDriverCard({ standing, summary, color }: Props) {
         <DriverAvatar
           givenName={standing.givenName}
           familyName={standing.familyName}
+          driverId={standing.driverId}
           size="lg"
         />
         <div className="min-w-0">
@@ -50,9 +51,11 @@ export function CompareDriverCard({ standing, summary, color }: Props) {
             {recentPos != null ? `P${Math.round(recentPos)}` : "—"}
           </p>
         </div>
-        <div className="ml-auto">
-          <TrendArrow trend={summary.trend} size="sm" showLabel />
-        </div>
+        {summary.trend !== "INSUFFICIENT_DATA" && (
+          <div className="ml-auto">
+            <TrendArrow trend={summary.trend} size="sm" showLabel />
+          </div>
+        )}
       </div>
     </div>
   )

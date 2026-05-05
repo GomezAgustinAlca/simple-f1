@@ -37,7 +37,7 @@ export function DriverCard({
         aria-label={`${givenName} ${familyName}`}
       />
       <div className="flex items-center gap-3">
-        <DriverAvatar givenName={givenName} familyName={familyName} size="md" />
+        <DriverAvatar givenName={givenName} familyName={familyName} driverId={driverId} size="md" />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">

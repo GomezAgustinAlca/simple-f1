@@ -2,6 +2,7 @@
 
 import { forwardRef, useState, useEffect } from "react"
 import type { CircuitDef } from "./circuitData"
+import { getDriverImage } from "@/utils/getDriverImage"
 
 interface CircuitSVGProps {
   circuit: CircuitDef
@@ -148,7 +149,7 @@ export const CircuitSVG = forwardRef<SVGSVGElement, CircuitSVGProps>(
             </>
           ) : (
             <image
-              href={`/driver-images/${driverAId}.jpg`}
+              href={getDriverImage(driverAId) ?? `/driver-images/${driverAId}.jpg`}
               x="-12"
               y="-12"
               width="24"
@@ -172,7 +173,7 @@ export const CircuitSVG = forwardRef<SVGSVGElement, CircuitSVGProps>(
             </>
           ) : (
             <image
-              href={`/driver-images/${driverBId}.jpg`}
+              href={getDriverImage(driverBId) ?? `/driver-images/${driverBId}.jpg`}
               x="-12"
               y="-12"
               width="24"

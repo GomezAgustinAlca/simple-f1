@@ -10,6 +10,8 @@ interface CompareTableProps {
   resultsB: RaceResult[]
 }
 
+const NO_DATA_VALUES = new Set(["Sin datos", "Muestra limitada", "Incierto", "—"])
+
 function Cell({ value, winner }: { value: string; winner: boolean }) {
   return (
     <td
@@ -106,13 +108,24 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resul
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
-          {rows.map((row) => (
-            <tr key={row.label}>
-              <td className="py-2.5 px-3 text-sm text-gray-600">{row.label}</td>
-              <Cell value={row.a} winner={row.winnerA} />
-              <Cell value={row.b} winner={row.winnerB} />
-            </tr>
-          ))}
+          {rows.map((row) => {
+            const bothNoData = NO_DATA_VALUES.has(row.a) && NO_DATA_VALUES.has(row.b)
+            return (
+              <tr key={row.label}>
+                <td className="py-2.5 px-3 text-sm text-gray-600">{row.label}</td>
+                {bothNoData ? (
+                  <td colSpan={2} className="py-2.5 px-3 text-center text-sm text-gray-400 italic">
+                    Datos insuficientes
+                  </td>
+                ) : (
+                  <>
+                    <Cell value={row.a} winner={row.winnerA} />
+                    <Cell value={row.b} winner={row.winnerB} />
+                  </>
+                )}
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>

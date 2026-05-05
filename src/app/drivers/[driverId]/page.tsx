@@ -99,6 +99,7 @@ export default async function DriverPage({ params }: Props) {
               <DriverAvatar
                 givenName={standing.givenName}
                 familyName={standing.familyName}
+                driverId={standing.driverId}
                 size="xl"
                 className="ring-4 ring-indigo-50"
               />

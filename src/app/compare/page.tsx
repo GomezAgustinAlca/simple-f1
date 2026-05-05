@@ -228,8 +228,8 @@ function CompareContent() {
               />
 
               {/* Ventaja por circuito */}
-              <div className="space-y-2">
-                <h2 className="font-semibold text-gray-700 text-base">Ventaja por circuito</h2>
+              <div className="space-y-1.5">
+                <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wide">Ventaja por circuito</h2>
                 {(() => {
                   const { advantages, usedHistorical } = getCircuitAdvantage(
                     dataA.results, dataB.results, fullNameA, fullNameB, historyA, historyB
@@ -246,7 +246,7 @@ function CompareContent() {
                   const visible = showAllCircuits ? advantages : advantages.slice(0, 6)
                   return (
                     <div className="space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                         {visible.map((adv) => {
                           const isWinnerA = adv.winner === fullNameA
                           const winnerColor = isWinnerA ? colorA : colorB
@@ -256,7 +256,7 @@ function CompareContent() {
                           const barA = Math.max(5, ((20 - adv.posA) / 19) * 100)
                           const barB = Math.max(5, ((20 - adv.posB) / 19) * 100)
                           return (
-                            <div key={adv.circuit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 space-y-2">
+                            <div key={adv.circuit} className="bg-white rounded-xl border border-gray-100 shadow-sm p-2.5 space-y-1.5">
                               <div className="flex items-start justify-between gap-2">
                                 <p className="font-semibold text-gray-900 text-sm">{adv.circuit}</p>
                                 <span className="text-xs font-semibold shrink-0" style={{ color: winnerColor }}>
