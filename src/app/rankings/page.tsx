@@ -8,6 +8,8 @@ import type { StatusLabel, TrendType, RaceResult, DriverPerformanceSummary } fro
 
 interface RankingEntry {
   driverId: string
+  givenName: string
+  familyName: string
   driverName: string
   constructorName: string
   statusLabel: StatusLabel
@@ -673,6 +675,9 @@ export default function RankingsPage() {
                   <div key={entry.driverId}>
                     <RankingCard
                       rank={i + 1}
+                      driverId={entry.driverId}
+                      givenName={entry.givenName}
+                      familyName={entry.familyName}
                       driverName={entry.driverName}
                       constructorName={entry.constructorName}
                       statusLabel={entry.statusLabel}

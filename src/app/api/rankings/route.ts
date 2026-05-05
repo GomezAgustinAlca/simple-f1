@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
   const withStanding = summaries.map((summary, i) => ({
     ...summary,
     standingPosition: topDrivers[i].position,
+    givenName: topDrivers[i].givenName,
+    familyName: topDrivers[i].familyName,
     driverName: `${topDrivers[i].givenName} ${topDrivers[i].familyName}`,
     constructorName: topDrivers[i].constructorName,
     totalPoints: topDrivers[i].points,

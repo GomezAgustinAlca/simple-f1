@@ -22,7 +22,7 @@ const FORMATS = ["jpg", "png", "webp"] as const
 
 export function DriverAvatar({ givenName, familyName, driverId, size = "md", className = "" }: DriverAvatarProps) {
   const mappedSrc = driverId ? getDriverImage(driverId) : null
-  const lastName = familyName.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+  const lastName = (familyName ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
   const [attempt, setAttempt] = useState(0)
   const [mappedError, setMappedError] = useState(false)
   const { wrapper, text } = sizeClasses[size]

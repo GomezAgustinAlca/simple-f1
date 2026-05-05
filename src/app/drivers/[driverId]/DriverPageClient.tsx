@@ -22,6 +22,7 @@ interface Props {
 export function DriverPageClient({ results, summary, lastRace, prevRace, teammate }: Props) {
   const [news, setNews] = useState<NewsItem[]>([])
   const [loadingNews, setLoadingNews] = useState(false)
+  const [showAllNews, setShowAllNews] = useState(false)
   const [historyResults, setHistoryResults] = useState<RaceResult[]>([])
 
   useEffect(() => {
@@ -211,13 +212,27 @@ export function DriverPageClient({ results, summary, lastRace, prevRace, teammat
             No se encontraron noticias recientes sobre este piloto.
           </p>
         )}
-        {news.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {news.map((item, i) => (
-              <NewsCard key={i} item={item} />
-            ))}
-          </div>
-        )}
+        {news.length > 0 && (() => {
+          const sorted = [...news].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          const visible = showAllNews ? sorted : sorted.slice(0, 3)
+          return (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {visible.map((item, i) => (
+                  <NewsCard key={i} item={item} />
+                ))}
+              </div>
+              {sorted.length > 3 && (
+                <button
+                  onClick={() => setShowAllNews((v) => !v)}
+                  className="mt-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
+                  {showAllNews ? "Ver menos" : `Ver más noticias (${sorted.length - 3} más)`}
+                </button>
+              )}
+            </>
+          )
+        })()}
       </section>
     </div>
   )
