@@ -66,7 +66,7 @@ export default async function HomePage() {
           <DriverSelector
             drivers={standings}
             placeholder="O buscá un piloto..."
-            navigateTo="compare"
+            navigateTo="driver"
           />
         </div>
         <p className="text-xs text-gray-400">
