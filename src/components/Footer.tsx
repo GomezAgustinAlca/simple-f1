@@ -17,10 +17,20 @@ export function Footer() {
           <Link href="/rankings" className="hover:text-gray-600 transition-colors">
             Rankings
           </Link>
-          <Link href="/premium" className="hover:text-gray-600 transition-colors">
-            Premium
-          </Link>
         </nav>
+        <div className="flex flex-col items-center gap-1 text-center">
+          <p className="text-xs text-gray-500">
+            Simple F1 es gratis. Si te sirve, podés apoyar el proyecto:
+          </p>
+          <a
+            href="https://cafecito.app/simplef1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
+          >
+            Apoyar el proyecto →
+          </a>
+        </div>
         <div className="flex flex-col items-center gap-1 text-center">
           <p className="text-xs text-gray-400">
             Simple F1 · Datos actualizados cada hora · Temporada {new Date().getFullYear()}

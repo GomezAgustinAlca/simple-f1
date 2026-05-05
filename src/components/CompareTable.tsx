@@ -13,7 +13,7 @@ interface CompareTableProps {
 function Cell({ value, better }: { value: string; better: boolean }) {
   return (
     <td
-      className={`py-4 px-4 text-center font-semibold text-sm ${
+      className={`py-2.5 px-3 text-center font-semibold text-sm ${
         better ? "text-indigo-700 bg-indigo-50" : "text-gray-700"
       }`}
     >
@@ -80,13 +80,13 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resul
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="py-4 px-4 text-left text-xs text-gray-400 uppercase tracking-wide font-medium">
+              <th className="py-3 px-3 text-left text-xs text-gray-400 uppercase tracking-wide font-medium">
                 Estadística
               </th>
-              <th className="py-4 px-4 text-center text-sm font-bold text-gray-900 bg-gray-50">
+              <th className="py-3 px-3 text-center text-sm font-bold text-gray-900 bg-gray-50">
                 {nameA}
               </th>
-              <th className="py-4 px-4 text-center text-sm font-bold text-gray-900">
+              <th className="py-3 px-3 text-center text-sm font-bold text-gray-900">
                 {nameB}
               </th>
             </tr>
@@ -94,7 +94,7 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resul
           <tbody className="divide-y divide-gray-50">
             {rows.map((row) => (
               <tr key={row.label}>
-                <td className="py-4 px-4 text-sm text-gray-600">{row.label}</td>
+                <td className="py-2.5 px-3 text-sm text-gray-600">{row.label}</td>
                 <Cell value={row.a} better={row.betterA} />
                 <Cell value={row.b} better={!row.betterA} />
               </tr>

@@ -114,9 +114,9 @@ export function CompareDecisionBlock({ nameA, nameB, summaryA, summaryB }: Props
 
   if (decision.winner === null) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4">
-        <p className="text-sm font-semibold text-gray-700">Comparación pareja con datos actuales</p>
-        <p className="text-xs text-gray-400 mt-0.5">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+        <p className="text-xl font-semibold text-gray-700">Comparación pareja con datos actuales</p>
+        <p className="text-sm text-gray-400 mt-1">
           Los datos disponibles no muestran una ventaja clara entre los dos pilotos.
         </p>
       </div>
@@ -124,8 +124,8 @@ export function CompareDecisionBlock({ nameA, nameB, summaryA, summaryB }: Props
   }
 
   return (
-    <div className="bg-white border border-indigo-100 rounded-2xl px-5 py-4 space-y-3 shadow-sm">
-      <p className="text-sm font-bold text-indigo-800">
+    <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6 space-y-3 shadow-sm">
+      <p className="text-2xl font-bold text-indigo-900">
         Si corren hoy, {decision.winnerName} tiene más chances de terminar adelante
       </p>
       {decision.reasons.length > 0 && (

@@ -36,7 +36,24 @@ export function Navbar() {
               {l.label}
             </Link>
           ))}
+          <a
+            href="https://cafecito.app/simplef1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+          >
+            Apoyar
+          </a>
         </div>
+
+        <a
+          href="https://cafecito.app/simplef1"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="sm:hidden px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+        >
+          Apoyar
+        </a>
 
         {/* Mobile menu button */}
         <button
