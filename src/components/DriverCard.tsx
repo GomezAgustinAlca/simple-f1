@@ -57,23 +57,13 @@ export function DriverCard({
           </div>
         </div>
       </div>
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
         <SummaryBadge label={statusLabel} />
-        <div className="flex items-center justify-between">
-          {points != null ? (
-            <span className="text-sm text-gray-500">
-              <span className="font-semibold text-gray-800">{points}</span> pts
-            </span>
-          ) : (
-            <span />
-          )}
-          <Link
-            href={`/compare?driverA=${driverId}`}
-            className="relative z-10 text-xs font-medium text-gray-600 border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50 hover:border-gray-400 transition-colors"
-          >
-            Comparar →
-          </Link>
-        </div>
+        {points != null && (
+          <span className="text-sm text-gray-500 shrink-0">
+            <span className="font-semibold text-gray-800">{points}</span> pts
+          </span>
+        )}
       </div>
     </div>
   )

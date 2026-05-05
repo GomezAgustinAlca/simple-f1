@@ -8,7 +8,7 @@ interface DriverSelectorProps {
   drivers: DriverStanding[]
   placeholder?: string
   onSelect?: (driverId: string) => void
-  navigateTo?: "driver" | "none"
+  navigateTo?: "driver" | "compare" | "none"
   selectedId?: string
 }
 
@@ -39,6 +39,7 @@ export function DriverSelector({
     setQuery("")
     if (onSelect) onSelect(driver.driverId)
     if (navigateTo === "driver") router.push(`/drivers/${driver.driverId}`)
+    if (navigateTo === "compare") router.push(`/compare?driverA=${driver.driverId}`)
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
