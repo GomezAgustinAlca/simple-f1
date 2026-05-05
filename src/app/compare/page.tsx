@@ -11,7 +11,8 @@ import { AdSlot } from "@/components/AdSlot"
 import { useAuth } from "@/contexts/AuthContext"
 import type { DriverStanding, DriverPerformanceSummary, RaceResult } from "@/types/f1"
 import { getTeamColor } from "@/components/duel/circuitData"
-import { getCompareWinner, getCircuitAdvantage } from "@/lib/performance"
+import { getCircuitAdvantage } from "@/lib/performance"
+import { CompareDecisionBlock } from "@/components/CompareDecisionBlock"
 
 
 function CompareSkeleton() {
@@ -69,7 +70,8 @@ function CompareContent() {
   const [historyB, setHistoryB] = useState<import("@/types/f1").RaceResult[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [showCircuitDetail, setShowCircuitDetail] = useState(false)
+  const [showAllCircuits, setShowAllCircuits] = useState(false)
+  const [expandedCircuit, setExpandedCircuit] = useState<string | null>(null)
 
   useEffect(() => {
     fetch("/api/drivers")
@@ -211,17 +213,12 @@ function CompareContent() {
 
           {!loading && dataA && dataB && (
             <div className="space-y-8">
-              {isPremium && (() => {
-                const winner = getCompareWinner(dataA.summary, dataB.summary)
-                const winnerName = winner === "A" ? fullNameA : winner === "B" ? fullNameB : null
-                return (
-                  <div className="bg-indigo-50 border border-indigo-100 rounded-2xl px-5 py-3.5">
-                    <p className="text-sm font-bold text-indigo-700">
-                      {winnerName ? `${winnerName} está mejor actualmente` : "Están equilibrados actualmente"}
-                    </p>
-                  </div>
-                )
-              })()}
+              <CompareDecisionBlock
+                nameA={fullNameA}
+                nameB={fullNameB}
+                summaryA={dataA.summary}
+                summaryB={dataB.summary}
+              />
               <CompareTable
                 nameA={fullNameA}
                 nameB={fullNameB}
@@ -250,68 +247,87 @@ function CompareContent() {
                         </div>
                       )
                     }
-                    const countA = advantages.filter((a) => a.winner === fullNameA).length
-                    const countB = advantages.filter((a) => a.winner === fullNameB).length
-                    const total = advantages.length
-                    const dominant = countA > countB ? fullNameA : countB > countA ? fullNameB : null
-                    const interpretation = dominant
-                      ? `${dominant.split(" ").pop()} tiene ventaja en el ${Math.round((Math.max(countA, countB) / total) * 100)}% de los circuitos comparados.`
-                      : "Equilibrio: ambos pilotos dominan en igual cantidad de circuitos."
-                    const byA = advantages.filter((a) => a.winner === fullNameA)
-                    const byB = advantages.filter((a) => a.winner === fullNameB)
-                    const groups = [
-                      { label: `Ventaja ${fullNameA.split(" ").pop()}`, items: byA, pill: "text-indigo-700 bg-indigo-50" },
-                      { label: `Ventaja ${fullNameB.split(" ").pop()}`, items: byB, pill: "text-orange-700 bg-orange-50" },
-                    ].filter((g) => g.items.length > 0)
+                    const nameALast = fullNameA.split(" ").pop()!
+                    const nameBLast = fullNameB.split(" ").pop()!
+                    const visible = showAllCircuits ? advantages : advantages.slice(0, 6)
                     return (
-                      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
-                        <div className="flex flex-wrap gap-2">
-                          {countA > 0 && (
-                            <span className="bg-indigo-50 text-indigo-700 text-xs font-medium px-3 py-1 rounded-full">
-                              {fullNameA.split(" ").pop()} domina: {countA} {countA === 1 ? "circuito" : "circuitos"}
-                            </span>
-                          )}
-                          {countB > 0 && (
-                            <span className="bg-orange-50 text-orange-700 text-xs font-medium px-3 py-1 rounded-full">
-                              {fullNameB.split(" ").pop()} domina: {countB} {countB === 1 ? "circuito" : "circuitos"}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500 italic">{interpretation}</p>
-                        <button
-                          onClick={() => setShowCircuitDetail((v) => !v)}
-                          className="text-xs text-indigo-600 font-medium hover:text-indigo-800 transition-colors flex items-center gap-1"
-                        >
-                          {showCircuitDetail ? "Ocultar detalle" : "Ver detalle por circuito"}
-                          <span className="text-gray-400 ml-0.5">{showCircuitDetail ? "▲" : "▼"}</span>
-                        </button>
-                        {showCircuitDetail && (
-                          <div className="space-y-4 border-t border-gray-50 pt-3">
-                            {groups.map((group) => (
-                              <div key={group.label}>
-                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full inline-block mb-2 ${group.pill}`}>
-                                  {group.label}
-                                </span>
-                                <div className="space-y-2">
-                                  {group.items.map((adv) => (
-                                    <div key={adv.circuit} className="space-y-1">
-                                      <div className="flex items-center gap-2 text-sm">
-                                        <span className="font-medium text-gray-800">{adv.circuit}</span>
-                                        <span className="text-xs text-gray-400 ml-auto">prom. P{adv.posA} vs P{adv.posB}</span>
-                                      </div>
-                                      {adv.races.map((race) => (
-                                        <div key={race.year} className="flex items-center gap-2 text-xs text-gray-500 pl-3 border-l-2 border-gray-100">
-                                          <span className="text-gray-400 shrink-0">{race.year}</span>
-                                          <span className="truncate">{race.gpName}</span>
-                                          <span className="ml-auto shrink-0 text-gray-400">P{race.posA} vs P{race.posB}</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ))}
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {visible.map((adv) => {
+                            const isWinnerA = adv.winner === fullNameA
+                            const winnerColor = isWinnerA ? colorA : colorB
+                            const wins = adv.races.filter((r) => isWinnerA ? r.posA < r.posB : r.posB < r.posA).length
+                            const total = adv.races.length
+                            const winnerLast = isWinnerA ? nameALast : nameBLast
+                            const barA = Math.max(5, ((20 - adv.posA) / 19) * 100)
+                            const barB = Math.max(5, ((20 - adv.posB) / 19) * 100)
+                            return (
+                              <div key={adv.circuit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="font-semibold text-gray-900 text-sm">{adv.circuit}</p>
+                                  <span className="text-xs font-semibold shrink-0" style={{ color: winnerColor }}>
+                                    {winnerLast} domina ({wins} de {total})
+                                  </span>
                                 </div>
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500 w-16 shrink-0 truncate">{nameALast}</span>
+                                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                      <div className="h-full rounded-full" style={{ width: `${barA}%`, backgroundColor: colorA }} />
+                                    </div>
+                                    <span className="text-xs text-gray-400 w-10 text-right shrink-0">P{adv.posA.toFixed(1)}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500 w-16 shrink-0 truncate">{nameBLast}</span>
+                                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                      <div className="h-full rounded-full" style={{ width: `${barB}%`, backgroundColor: colorB }} />
+                                    </div>
+                                    <span className="text-xs text-gray-400 w-10 text-right shrink-0">P{adv.posB.toFixed(1)}</span>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => setExpandedCircuit(expandedCircuit === adv.circuit ? null : adv.circuit)}
+                                  className="text-xs text-indigo-600 font-medium hover:text-indigo-800 transition-colors"
+                                >
+                                  {expandedCircuit === adv.circuit ? "Ocultar ↑" : "Ver detalle ↓"}
+                                </button>
+                                {expandedCircuit === adv.circuit && (
+                                  <div className="border-t border-gray-50 pt-2">
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr>
+                                          <th className="text-left font-medium text-gray-400 pb-1">Año</th>
+                                          <th className="text-center font-medium text-gray-400 pb-1">{nameALast}</th>
+                                          <th className="text-center font-medium text-gray-400 pb-1">{nameBLast}</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {adv.races.map((race) => (
+                                          <tr key={race.year} className="border-t border-gray-50">
+                                            <td className="py-1 text-gray-500">{race.year}</td>
+                                            <td className={`py-1 text-center ${race.posA < race.posB ? "font-bold text-gray-900" : "text-gray-400"}`}>
+                                              P{race.posA}
+                                            </td>
+                                            <td className={`py-1 text-center ${race.posB < race.posA ? "font-bold text-gray-900" : "text-gray-400"}`}>
+                                              P{race.posB}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
                               </div>
-                            ))}
-                          </div>
+                            )
+                          })}
+                        </div>
+                        {advantages.length > 6 && (
+                          <button
+                            onClick={() => setShowAllCircuits((v) => !v)}
+                            className="text-xs text-indigo-600 font-medium hover:text-indigo-800 transition-colors flex items-center gap-1"
+                          >
+                            {showAllCircuits ? "Ocultar circuitos ↑" : `Ver todos los circuitos (${advantages.length}) ↓`}
+                          </button>
                         )}
                         {usedHistorical && (
                           <p className="text-xs text-gray-400">Basado en histórico disponible</p>

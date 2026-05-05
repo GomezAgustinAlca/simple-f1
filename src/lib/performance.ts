@@ -72,7 +72,7 @@ export function buildPerformanceSummary(
     racesCount: results.length,
     lastFiveAveragePosition: lastFive.length > 0 ? avg(lastFive.map((r) => r.position!)) : null,
     seasonAveragePosition: finished.length > 0 ? avg(positions) : null,
-    totalPoints: results.reduce((s, r) => s + r.points, 0),
+    totalPoints: 0, // set by caller from driverStandings — never calculated from results
     dnfs,
     bestFinish: positions.length > 0 ? Math.min(...positions) : null,
     worstFinish: positions.length > 0 ? Math.max(...positions) : null,
