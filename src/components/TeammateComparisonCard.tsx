@@ -41,7 +41,7 @@ export function TeammateComparisonCard({
           }`}
         >
           {comparison.avgPositionDiff > 0 ? "+" : ""}
-          {comparison.avgPositionDiff} pos.
+          {Math.round(comparison.avgPositionDiff)} posiciones
         </span>
       </div>
 

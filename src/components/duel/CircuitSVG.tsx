@@ -148,7 +148,7 @@ export const CircuitSVG = forwardRef<SVGSVGElement, CircuitSVGProps>(
             </>
           ) : (
             <image
-              href={`/drivers/${driverAId}.jpg`}
+              href={`/driver-images/${driverAId}.jpg`}
               x="-12"
               y="-12"
               width="24"
@@ -172,7 +172,7 @@ export const CircuitSVG = forwardRef<SVGSVGElement, CircuitSVGProps>(
             </>
           ) : (
             <image
-              href={`/drivers/${driverBId}.jpg`}
+              href={`/driver-images/${driverBId}.jpg`}
               x="-12"
               y="-12"
               width="24"

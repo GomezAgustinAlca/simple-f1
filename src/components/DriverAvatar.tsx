@@ -39,7 +39,7 @@ export function DriverAvatar({ givenName, familyName, size = "md", className = "
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={`/drivers/${lastName}.${FORMATS[attempt]}`}
+      src={`/driver-images/${lastName}.${FORMATS[attempt]}`}
       alt={`${givenName} ${familyName}`}
       className={`${wrapper} rounded-full object-cover object-top flex-shrink-0 ring-2 ring-white bg-gray-100 ${className}`}
       onError={() => setAttempt(a => a + 1)}

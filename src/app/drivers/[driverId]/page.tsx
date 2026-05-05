@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
 import { getDriverResults, getDriverStandings, getRaceResults, getCurrentSeasonYear } from "@/lib/jolpica"
 import { buildPerformanceSummary, buildTeammateComparison, getPerformanceLevel, getTrend, getRecentPerformance } from "@/lib/performance"
 import { enrichSummary } from "@/lib/summaries"
@@ -18,6 +19,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { driverId } = await params
+  if (driverId.includes(".")) return {}
   const standings = await getDriverStandings("current")
   const standing = standings.find((s) => s.driverId === driverId)
   const name = standing
@@ -32,6 +34,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DriverPage({ params }: Props) {
   const { driverId } = await params
+
+  if (driverId.includes(".")) {
+    notFound()
+  }
 
   const [results, standings, allSeasonResults, currentSeasonStr] = await Promise.all([
     getDriverResults("current", driverId),
