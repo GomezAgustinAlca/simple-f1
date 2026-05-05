@@ -1,5 +1,4 @@
 import { getPerformanceLevel, getTrend, getRecentPerformance } from "@/lib/performance"
-import { getCompareMotivo } from "@/lib/summaries"
 import type { DriverPerformanceSummary, RaceResult } from "@/types/f1"
 
 interface CompareTableProps {
@@ -76,16 +75,8 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resul
     },
   ]
 
-  const aWins = rows.filter((r) => r.betterA).length
-  const bWins = rows.length - aWins
-  const advantageName = aWins > bWins ? nameA : bWins > aWins ? nameB : null
-
-  const conclusionTitle = advantageName ? `${advantageName} está mejor actualmente` : "Están equilibrados actualmente"
-  const conclusionMotivo = getCompareMotivo(summaryA, summaryB, nameA, nameB, advantageName)
-
   return (
-    <div className="space-y-3">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-100">
@@ -111,12 +102,5 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resul
           </tbody>
         </table>
       </div>
-
-      {/* Conclusion */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
-        <p className="text-sm font-semibold text-indigo-700 mb-1">{conclusionTitle}</p>
-        <p className="text-gray-600 text-sm">Motivo: {conclusionMotivo}</p>
-      </div>
-    </div>
   )
 }
