@@ -112,10 +112,14 @@ export function getTrend(lastResults: RaceResult[]): string {
 
 export function getRecentPerformance(avgLast5: number | null, racesCount: number): string {
   if (racesCount < 3 || avgLast5 == null) return "Muestra limitada"
-  if (avgLast5 <= 3) return "Top 3"
-  if (avgLast5 <= 5) return "Top 5"
-  if (avgLast5 <= 10) return "Top 10"
-  return "Fuera del Top 10"
+  return avgPositionToLabel(avgLast5)
+}
+
+export function avgPositionToLabel(avg: number): string {
+  if (avg <= 3) return "Top 3"
+  if (avg <= 5) return "Top 5"
+  if (avg <= 10) return "Top 10"
+  return "fuera del Top 10"
 }
 
 export function getCompareWinner(

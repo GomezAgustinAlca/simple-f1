@@ -9,7 +9,6 @@ interface CompareTableProps {
   summaryB: DriverPerformanceSummary
   resultsA: RaceResult[]
   resultsB: RaceResult[]
-  isPremium: boolean
 }
 
 function Cell({ value, better }: { value: string; better: boolean }) {
@@ -24,7 +23,7 @@ function Cell({ value, better }: { value: string; better: boolean }) {
   )
 }
 
-export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resultsB, isPremium }: CompareTableProps) {
+export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resultsB }: CompareTableProps) {
   const levelA = getPerformanceLevel(summaryA.seasonAveragePosition)
   const levelB = getPerformanceLevel(summaryB.seasonAveragePosition)
   const trendA = getTrend(resultsA)
@@ -116,21 +115,7 @@ export function CompareTable({ nameA, nameB, summaryA, summaryB, resultsA, resul
       {/* Conclusion */}
       <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
         <p className="text-sm font-semibold text-indigo-700 mb-1">{conclusionTitle}</p>
-        {isPremium ? (
-          <p className="text-gray-600 text-sm">Motivo: {conclusionMotivo}</p>
-        ) : (
-          <div className="flex items-center gap-3">
-            <p className="text-gray-600 text-sm blur-sm select-none flex-1">Motivo: {conclusionMotivo}</p>
-            <a
-              href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-xs font-semibold text-indigo-700 bg-white px-3 py-1.5 rounded-full border border-indigo-200 shadow-sm hover:shadow-md transition-shadow whitespace-nowrap"
-            >
-              Ver por qué
-            </a>
-          </div>
-        )}
+        <p className="text-gray-600 text-sm">Motivo: {conclusionMotivo}</p>
       </div>
     </div>
   )

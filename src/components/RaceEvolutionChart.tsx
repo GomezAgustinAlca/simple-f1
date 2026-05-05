@@ -52,11 +52,10 @@ function CustomTooltip({ active, payload }: any) {
 
 interface RaceEvolutionChartProps {
   results: RaceResult[]
-  isPremium?: boolean
 }
 
-export function RaceEvolutionChart({ results, isPremium = false }: RaceEvolutionChartProps) {
-  const slice = isPremium ? results : results.slice(-5)
+export function RaceEvolutionChart({ results }: RaceEvolutionChartProps) {
+  const slice = results
 
   const data: ChartPoint[] = slice.map((r) => ({
     gp: abbreviateGP(r.raceName),

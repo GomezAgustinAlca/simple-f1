@@ -1,5 +1,6 @@
 "use client"
 
+import { avgPositionToLabel } from "@/lib/performance"
 import type { DriverPerformanceSummary } from "@/types/f1"
 
 interface Props {
@@ -37,8 +38,8 @@ function getDecision(
   if (recentA != null && recentB != null && Math.abs(recentA - recentB) >= 0.5) {
     dims.push({
       score: recentA < recentB ? 1 : -1,
-      reasonA: `Mejor promedio en últimas carreras: P${recentA.toFixed(1)} vs P${recentB.toFixed(1)}`,
-      reasonB: `Mejor promedio en últimas carreras: P${recentB.toFixed(1)} vs P${recentA.toFixed(1)}`,
+      reasonA: `Mejor rendimiento reciente: ${avgPositionToLabel(recentA)} vs ${avgPositionToLabel(recentB)}`,
+      reasonB: `Mejor rendimiento reciente: ${avgPositionToLabel(recentB)} vs ${avgPositionToLabel(recentA)}`,
     })
     addedRecentDim = true
   }

@@ -39,21 +39,33 @@ export default async function HomePage() {
   )
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10 space-y-12">
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-10">
       {/* Hero */}
       <section className="text-center space-y-4">
         <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight">
-          Entendé cómo viene cada piloto
-          <br />
-          <span className="text-indigo-600">sin volverte ingeniero</span>
+          Compará pilotos de F1 en segundos
         </h1>
         <p className="text-gray-500 text-base max-w-xl mx-auto">
-          Rendimiento, tendencia y comparación simple carrera por carrera.
+          Simple F1 te muestra quién está mejor, por qué y en qué circuitos cambia la ventaja.
         </p>
-        <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-3">
+          <a
+            href="/compare"
+            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors"
+          >
+            Comparar pilotos
+          </a>
+          <a
+            href="/rankings"
+            className="inline-block bg-white hover:bg-gray-50 text-gray-700 font-semibold text-sm px-5 py-2.5 rounded-xl border border-gray-200 transition-colors"
+          >
+            Ver rankings
+          </a>
+        </div>
+        <div className="flex justify-center pt-1">
           <DriverSelector
             drivers={standings}
-            placeholder="Buscá un piloto..."
+            placeholder="O buscá un piloto..."
             navigateTo="driver"
           />
         </div>

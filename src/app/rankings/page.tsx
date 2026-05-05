@@ -3,10 +3,6 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { RankingCard } from "@/components/RankingCard"
-import { PremiumBanner } from "@/components/PremiumBanner"
-import { AdSlot } from "@/components/AdSlot"
-import { PremiumModal } from "@/components/PremiumModal"
-import { useAuth } from "@/contexts/AuthContext"
 import { getCircuitPerformance } from "@/lib/performance"
 import type { StatusLabel, TrendType, RaceResult, DriverPerformanceSummary } from "@/types/f1"
 
@@ -185,11 +181,10 @@ interface DriverDetailPanelProps {
   detail: DriverDetail | null
   isLoading: boolean
   hasError: boolean
-  isPremium: boolean
   historyResults: RaceResult[]
 }
 
-function DriverDetailPanel({ driverId, detail, isLoading, hasError, isPremium, historyResults }: DriverDetailPanelProps) {
+function DriverDetailPanel({ driverId, detail, isLoading, hasError, historyResults }: DriverDetailPanelProps) {
   return (
     <div className="rounded-b-2xl border border-gray-100 border-t-0 bg-gray-50 overflow-hidden">
       {isLoading && (
@@ -214,67 +209,34 @@ function DriverDetailPanel({ driverId, detail, isLoading, hasError, isPremium, h
         <div className="p-5 space-y-4">
           <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
             <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Conclusión</p>
-            {isPremium ? (
-              <p className="text-sm text-gray-800">{conclusionText(detail.summary)}</p>
-            ) : (
-              <div className="flex items-center gap-3">
-                <p className="text-sm text-gray-800 blur-sm select-none flex-1">{conclusionText(detail.summary)}</p>
-                <a
-                  href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="shrink-0 text-xs font-semibold text-indigo-700 bg-white px-3 py-1.5 rounded-full border border-indigo-200 shadow-sm hover:shadow-md transition-shadow whitespace-nowrap"
-                >
-                  Ver por qué
-                </a>
-              </div>
-            )}
+            <p className="text-sm text-gray-800">{conclusionText(detail.summary)}</p>
           </div>
 
-          {/* Circuitos fuertes / débiles — premium gate */}
-          {isPremium ? (
-            (() => {
-              const cp = getCircuitPerformance(detail.results, historyResults)
-              return (
-                <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 text-sm space-y-1">
-                  {cp.hasEnoughData ? (
-                    <>
-                      <p className="text-gray-600">
-                        Fuerte en:{" "}
-                        <span className="font-semibold text-gray-900">{cp.best.join(", ")}</span>
-                      </p>
-                      <p className="text-gray-600">
-                        Débil en:{" "}
-                        <span className="font-semibold text-gray-900">{cp.worst.join(", ")}</span>
-                      </p>
-                      {cp.usedHistorical && (
-                        <p className="text-xs text-gray-400 pt-0.5">Basado en histórico disponible</p>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-gray-400">Sin datos suficientes por circuito.</p>
-                  )}
-                </div>
-              )
-            })()
-          ) : (
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm space-y-1">
-              <div className="flex items-center gap-3">
-                <p className="text-gray-600 blur-sm select-none flex-1">Fuerte en: <span className="font-semibold">Monza, Silverstone</span></p>
+          {/* Circuitos fuertes / débiles */}
+          {(() => {
+            const cp = getCircuitPerformance(detail.results, historyResults)
+            return (
+              <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 text-sm space-y-1">
+                {cp.hasEnoughData ? (
+                  <>
+                    <p className="text-gray-600">
+                      Fuerte en:{" "}
+                      <span className="font-semibold text-gray-900">{cp.best.join(", ")}</span>
+                    </p>
+                    <p className="text-gray-600">
+                      Débil en:{" "}
+                      <span className="font-semibold text-gray-900">{cp.worst.join(", ")}</span>
+                    </p>
+                    {cp.usedHistorical && (
+                      <p className="text-xs text-gray-400 pt-0.5">Basado en histórico disponible</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-gray-400">Sin datos suficientes por circuito.</p>
+                )}
               </div>
-              <div className="flex items-center gap-3">
-                <p className="text-gray-600 blur-sm select-none flex-1">Débil en: <span className="font-semibold">Mónaco, Singapur</span></p>
-              </div>
-              <a
-                href="https://simplef1.lemonsqueezy.com/checkout/buy/a17d801a-9e92-4da7-9e2b-e314c6d30906"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 hover:text-indigo-900 transition-colors pt-0.5"
-              >
-                Entender el rendimiento →
-              </a>
-            </div>
-          )}
+            )
+          })()}
 
           {detail.results.length > 0 ? (
             <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
@@ -567,12 +529,10 @@ type FreeTab = "all" | "improving" | "consistent" | "unstable"
 type PremiumSection = "historico" | "por-temporada"
 
 export default function RankingsPage() {
-  const { isPremium } = useAuth()
   const [data, setData] = useState<RankingsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<FreeTab>("all")
   const [activePremium, setActivePremium] = useState<PremiumSection | null>(null)
-  const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [detailsCache, setDetailsCache] = useState<Record<string, DetailState>>({})
   const [historyCache, setHistoryCache] = useState<Record<string, RaceResult[]>>({})
@@ -607,7 +567,7 @@ export default function RankingsPage() {
       }
     }
 
-    if (isPremium && !historyCache[driverId]) {
+    if (!historyCache[driverId]) {
       fetch(`/api/drivers/${driverId}/history`)
         .then((r) => r.json())
         .then((d) => setHistoryCache((prev) => ({ ...prev, [driverId]: d.results ?? [] })))
@@ -634,10 +594,6 @@ export default function RankingsPage() {
   }
 
   function handlePremiumTab(key: PremiumSection) {
-    if (!isPremium) {
-      setShowPremiumModal(true)
-      return
-    }
     setActivePremium((prev) => (prev === key ? null : key))
   }
 
@@ -652,19 +608,10 @@ export default function RankingsPage() {
         </p>
       </div>
 
-      {!isPremium && <AdSlot slot="rankings-top" />}
-
       {/* Tabs */}
       <div className="space-y-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-              Sección básica
-            </span>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
-              Gratis
-            </span>
-          </div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Rankings</p>
           <div className="flex flex-wrap gap-2">
             {freeTabs.map((tab) => (
               <button
@@ -683,34 +630,18 @@ export default function RankingsPage() {
         </div>
 
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-              Sección avanzada
-            </span>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">
-              Premium
-            </span>
-          </div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Análisis avanzado</p>
           <div className="flex flex-wrap gap-2">
             {premiumTabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => handlePremiumTab(tab.key)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors flex items-center gap-1 ${
+                className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
                   activePremium === tab.key
-                    ? "bg-yellow-500 text-white border-yellow-500"
-                    : "border-yellow-200 bg-white text-yellow-700 hover:bg-yellow-50"
+                    ? "bg-indigo-600 text-white border-indigo-600"
+                    : "bg-white border-gray-200 text-gray-600 hover:border-indigo-200 hover:text-indigo-600"
                 }`}
               >
-                {!isPremium && (
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                )}
                 {tab.label}
               </button>
             ))}
@@ -758,7 +689,6 @@ export default function RankingsPage() {
                         detail={cached?.data ?? null}
                         isLoading={loadingDetail === entry.driverId}
                         hasError={cached?.error ?? false}
-                        isPremium={isPremium}
                         historyResults={historyCache[entry.driverId] ?? []}
                       />
                     )}
@@ -770,9 +700,6 @@ export default function RankingsPage() {
         </>
       )}
 
-      <PremiumBanner />
-
-      {showPremiumModal && <PremiumModal onClose={() => setShowPremiumModal(false)} />}
     </div>
   )
 }

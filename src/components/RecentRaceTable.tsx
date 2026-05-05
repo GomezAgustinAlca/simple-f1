@@ -5,11 +5,10 @@ import type { RaceResult } from "@/types/f1"
 
 interface RecentRaceTableProps {
   results: RaceResult[]
-  isPremium?: boolean
 }
 
-export function RecentRaceTable({ results, isPremium = false }: RecentRaceTableProps) {
-  const slice = isPremium ? results : results.slice(-5)
+export function RecentRaceTable({ results }: RecentRaceTableProps) {
+  const slice = results
 
   if (slice.length === 0) {
     return <p className="text-gray-400 text-sm">Sin carreras disponibles.</p>
