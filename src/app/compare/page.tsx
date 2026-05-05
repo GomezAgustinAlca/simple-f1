@@ -9,6 +9,7 @@ import type { DriverStanding, DriverPerformanceSummary, RaceResult } from "@/typ
 import { getTeamColor } from "@/components/duel/circuitData"
 import { getCircuitAdvantage, avgPositionToLabel } from "@/lib/performance"
 import { CompareDecisionBlock } from "@/components/CompareDecisionBlock"
+import { CompareDriverCard } from "@/components/CompareDriverCard"
 
 
 function CompareSkeleton() {
@@ -211,6 +212,12 @@ function CompareContent() {
                 summaryA={dataA.summary}
                 summaryB={dataB.summary}
               />
+              {standingA && standingB && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+                  <CompareDriverCard standing={standingA} summary={dataA.summary} color={colorA} />
+                  <CompareDriverCard standing={standingB} summary={dataB.summary} color={colorB} />
+                </div>
+              )}
               <CompareTable
                 nameA={fullNameA}
                 nameB={fullNameB}

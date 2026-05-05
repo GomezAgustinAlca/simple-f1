@@ -30,10 +30,12 @@ export function DriverCard({
 }: DriverCardProps) {
   const flag = nationalityFlag(nationality)
   return (
-    <Link
-      href={`/drivers/${driverId}`}
-      className="block bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-5"
-    >
+    <div className="relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-5">
+      <Link
+        href={`/drivers/${driverId}`}
+        className="absolute inset-0 rounded-2xl"
+        aria-label={`${givenName} ${familyName}`}
+      />
       <div className="flex items-center gap-3">
         <DriverAvatar givenName={givenName} familyName={familyName} size="md" />
         <div className="min-w-0 flex-1">
@@ -55,14 +57,24 @@ export function DriverCard({
           </div>
         </div>
       </div>
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-4 space-y-3">
         <SummaryBadge label={statusLabel} />
-        {points != null && (
-          <span className="text-sm text-gray-500">
-            <span className="font-semibold text-gray-800">{points}</span> pts
-          </span>
-        )}
+        <div className="flex items-center justify-between">
+          {points != null ? (
+            <span className="text-sm text-gray-500">
+              <span className="font-semibold text-gray-800">{points}</span> pts
+            </span>
+          ) : (
+            <span />
+          )}
+          <Link
+            href={`/compare?driverA=${driverId}`}
+            className="relative z-10 text-xs font-medium text-gray-600 border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+          >
+            Comparar →
+          </Link>
+        </div>
       </div>
-    </Link>
+    </div>
   )
 }

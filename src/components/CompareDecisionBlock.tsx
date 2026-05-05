@@ -1,6 +1,5 @@
 "use client"
 
-import { avgPositionToLabel } from "@/lib/performance"
 import type { DriverPerformanceSummary } from "@/types/f1"
 
 interface Props {
@@ -19,8 +18,28 @@ interface Decision {
 
 interface ScoredDimension {
   score: number
-  reasonA: string
-  reasonB: string
+  label: string
+  valueA: number
+  valueB: number
+}
+
+function formatComparisonLabel(label: string, winnerValue: number, loserValue: number): string | null {
+  if (label === "Rendimiento reciente") {
+    return `Terminó cerca del P${Math.round(winnerValue)} vs P${Math.round(loserValue)} en las últimas carreras`
+  }
+  if (label === "Abandonos") {
+    if (winnerValue === 0) {
+      return `No abandonó esta temporada vs ${loserValue} abandono${loserValue !== 1 ? "s" : ""} del rival`
+    }
+    return `${winnerValue} abandono${winnerValue !== 1 ? "s" : ""} vs ${loserValue} del rival esta temporada`
+  }
+  if (label === "Consistencia") {
+    return `Resultados más estables: varió ${Math.round(winnerValue)} posiciones vs ${Math.round(loserValue)}`
+  }
+  if (label === "Puntos") {
+    return `${Math.round(winnerValue)} puntos vs ${Math.round(loserValue)} del rival en la temporada`
+  }
+  return null
 }
 
 function getDecision(
@@ -38,8 +57,9 @@ function getDecision(
   if (recentA != null && recentB != null && Math.abs(recentA - recentB) >= 0.5) {
     dims.push({
       score: recentA < recentB ? 1 : -1,
-      reasonA: `Mejor rendimiento reciente: ${avgPositionToLabel(recentA)} vs ${avgPositionToLabel(recentB)}`,
-      reasonB: `Mejor rendimiento reciente: ${avgPositionToLabel(recentB)} vs ${avgPositionToLabel(recentA)}`,
+      label: "Rendimiento reciente",
+      valueA: recentA,
+      valueB: recentB,
     })
     addedRecentDim = true
   }
@@ -58,8 +78,9 @@ function getDecision(
     if (Math.abs(spreadA - spreadB) >= 3) {
       dims.push({
         score: spreadA < spreadB ? 1 : -1,
-        reasonA: `Menor variación de resultados: ${spreadA} posiciones vs ${spreadB} (más consistente)`,
-        reasonB: `Menor variación de resultados: ${spreadB} posiciones vs ${spreadA} (más consistente)`,
+        label: "Consistencia",
+        valueA: spreadA,
+        valueB: spreadB,
       })
     }
   }
@@ -68,8 +89,9 @@ function getDecision(
   if (summaryA.dnfs !== summaryB.dnfs) {
     dims.push({
       score: summaryA.dnfs < summaryB.dnfs ? 1 : -1,
-      reasonA: `Menos abandonos: ${summaryA.dnfs} vs ${summaryB.dnfs}`,
-      reasonB: `Menos abandonos: ${summaryB.dnfs} vs ${summaryA.dnfs}`,
+      label: "Abandonos",
+      valueA: summaryA.dnfs,
+      valueB: summaryB.dnfs,
     })
   }
 
@@ -78,8 +100,9 @@ function getDecision(
   if (!addedRecentDim && ptsDiff >= 10) {
     dims.push({
       score: summaryA.totalPoints > summaryB.totalPoints ? 1 : -1,
-      reasonA: `Mayor acumulado de puntos: ${summaryA.totalPoints} vs ${summaryB.totalPoints}`,
-      reasonB: `Mayor acumulado de puntos: ${summaryB.totalPoints} vs ${summaryA.totalPoints}`,
+      label: "Puntos",
+      valueA: summaryA.totalPoints,
+      valueB: summaryB.totalPoints,
     })
   }
 
@@ -93,10 +116,13 @@ function getDecision(
   const winnerName = side === "A" ? nameA : nameB
   const winnerSummary = side === "A" ? summaryA : summaryB
 
+  const winnerValueKey = side === "A" ? "valueA" : "valueB"
+  const loserValueKey = side === "A" ? "valueB" : "valueA"
   const reasons = dims
     .filter((d) => (side === "A" ? d.score > 0 : d.score < 0))
-    .map((d) => (side === "A" ? d.reasonA : d.reasonB))
-    .slice(0, 3)
+    .map((d) => formatComparisonLabel(d.label, d[winnerValueKey], d[loserValueKey]))
+    .filter((r): r is string => r !== null)
+    .slice(0, 2)
 
   let risk: string | null = null
   const dnfRate = winnerSummary.racesCount > 0 ? winnerSummary.dnfs / winnerSummary.racesCount : 0
@@ -113,28 +139,11 @@ export function CompareDecisionBlock({ nameA, nameB, summaryA, summaryB }: Props
   const decision = getDecision(nameA, nameB, summaryA, summaryB)
 
   if (decision.winner === null) {
-    const fewRaces = summaryA.racesCount < 5 || summaryB.racesCount < 5
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-3">
         <p className="text-xl font-semibold text-gray-700">
-          Todavía no hay suficiente información para comparar con confianza
+          Comparación pareja con datos actuales
         </p>
-        <ul className="space-y-1.5">
-          <li className="flex items-start gap-2 text-sm text-gray-500">
-            <span className="text-gray-400 mt-0.5 shrink-0">•</span>
-            Pocas carreras disputadas en la temporada
-          </li>
-          <li className="flex items-start gap-2 text-sm text-gray-500">
-            <span className="text-gray-400 mt-0.5 shrink-0">•</span>
-            Los resultados aún no muestran una tendencia clara
-          </li>
-          {fewRaces && (
-            <li className="flex items-start gap-2 text-sm text-gray-500">
-              <span className="text-gray-400 mt-0.5 shrink-0">•</span>
-              Puede cambiar rápidamente en próximas carreras
-            </li>
-          )}
-        </ul>
       </div>
     )
   }

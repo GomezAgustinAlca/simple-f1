@@ -20,7 +20,7 @@ export function getDriverSnapshot(summary: DriverPerformanceSummary): {
   const bullets: string[] = []
 
   if (lastFiveAveragePosition != null) {
-    const avg = lastFiveAveragePosition.toFixed(1)
+    const avg = Math.round(lastFiveAveragePosition)
     const suffix = trend === "UP" ? " — viene al alza" : trend === "DOWN" ? " — viene bajando" : ""
     bullets.push(`Promedio últimas carreras: P${avg}${suffix}`)
   }

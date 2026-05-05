@@ -118,12 +118,20 @@ export default async function DriverPage({ params }: Props) {
               )}
             </div>
           </div>
-          {standing?.points != null && (
-            <div className="text-right">
-              <p className="text-3xl font-black text-indigo-600">{standing.points}</p>
-              <p className="text-xs text-gray-400">puntos</p>
-            </div>
-          )}
+          <div className="flex flex-col items-end gap-2">
+            {standing?.points != null && (
+              <div className="text-right">
+                <p className="text-3xl font-black text-indigo-600">{standing.points}</p>
+                <p className="text-xs text-gray-400">puntos</p>
+              </div>
+            )}
+            <a
+              href={`/compare?driverA=${driverId}`}
+              className="text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg px-3 py-1.5 hover:bg-indigo-50 transition-colors whitespace-nowrap"
+            >
+              Comparar con otro piloto →
+            </a>
+          </div>
         </div>
       </div>
 
@@ -177,7 +185,7 @@ export default async function DriverPage({ params }: Props) {
           </p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-2">
-          <p className="text-xs text-gray-400 uppercase tracking-wide">DNFs temporada</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wide">Abandonos</p>
           <p className="text-2xl font-black text-gray-900">{summary.dnfs}</p>
         </div>
       </div>
