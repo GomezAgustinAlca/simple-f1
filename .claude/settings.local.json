@@ -12,7 +12,8 @@
       "Bash(node *)",
       "Bash(curl -s \"http://localhost:3000/api/drivers\" -v)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\agust\\\\Documents\\\\race-pulse\" -Recurse -Directory -Name)",
-      "Bash(Select-Object -First 20)"
+      "Bash(Select-Object -First 20)",
+      "Bash(findstr /i \"vercel\")"
     ]
   }
 }

@@ -5,6 +5,7 @@ import "./globals.css"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { Navbar } from "@/components/Navbar"
 import { Footer } from "@/components/Footer"
+import { Analytics } from "@vercel/analytics/react"
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
 
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1">{children}</main>
           <Footer />
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   )
