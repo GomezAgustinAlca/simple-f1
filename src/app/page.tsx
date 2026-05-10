@@ -126,15 +126,15 @@ export default async function HomePage() {
                     <td className="py-3 px-4">
                       <a
                         href={`/drivers/${s.driverId}`}
-                        className="font-medium text-gray-900 hover:text-indigo-600 transition-colors"
+                        className="inline-flex items-center gap-1.5 font-medium text-gray-900 hover:text-indigo-600 transition-colors"
                       >
+                        {nationalityFlag(s.nationality) && (
+                          <span>{nationalityFlag(s.nationality)}</span>
+                        )}
                         {s.givenName} {s.familyName}
                       </a>
                     </td>
                     <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">
-                      {nationalityFlag(s.nationality) && (
-                        <span className="mr-1">{nationalityFlag(s.nationality)}</span>
-                      )}
                       {s.constructorName}
                     </td>
                     <td className="py-3 px-4 text-right font-bold text-gray-900">

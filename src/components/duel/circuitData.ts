@@ -80,6 +80,7 @@ export const TEAM_COLORS: Record<string, string> = {
   racing_bulls: "#1E41FF",
   audi: "#1A1A1A",
   kick_sauber: "#1A1A1A",
+  cadillac: "#002654",
   default: "#6B7280",
 }
 

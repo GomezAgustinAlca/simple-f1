@@ -1,4 +1,5 @@
 import type { Driver, RaceResult, DriverStanding } from "@/types/f1"
+import { normalizeTeamName } from "@/lib/teams"
 
 const BASE = "https://api.jolpi.ca/ergast/f1"
 
@@ -53,7 +54,7 @@ function parseRaceResults(data: any): RaceResult[] {
         circuitName: race.Circuit?.circuitName ?? "",
         driverId: r.Driver?.driverId ?? "",
         constructorId: r.Constructor?.constructorId ?? "",
-        constructorName: r.Constructor?.name ?? "",
+        constructorName: normalizeTeamName(r.Constructor?.name ?? ""),
         grid: r.grid ? parseInt(r.grid) : undefined,
         position: r.position ? parseInt(r.position) : undefined,
         positionText: r.positionText,
@@ -114,7 +115,7 @@ export async function getDriverStandings(
     givenName: s.Driver?.givenName ?? "",
     familyName: s.Driver?.familyName ?? "",
     nationality: s.Driver?.nationality ?? "",
-    constructorName: s.Constructors?.[0]?.name ?? "",
+    constructorName: normalizeTeamName(s.Constructors?.[0]?.name ?? ""),
   }))
 }
 
